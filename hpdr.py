@@ -125,7 +125,7 @@ def substitute(query,
     formats_list.append(('slop_end_ts', slop_end.format('%Y-%m-%d %H:%M:%S')))
     formats_list.append(('utc_begin_ts', utc_begin.format('%Y-%m-%d %H:%M:%S')))
     formats_list.append(('utc_end_ts', utc_end.format('%Y-%m-%d %H:%M:%S')))
-    formats_list += formats_for_datetime('begin', end)
+    formats_list += formats_for_datetime('begin', begin)
     formats_list += formats_for_datetime('end', end)
     formats_list += formats_for_datetime('utc_begin', utc_begin)
     formats_list += formats_for_datetime('utc_end', utc_end)
