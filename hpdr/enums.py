@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import enum
 
 class Position(enum.IntEnum):

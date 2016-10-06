@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 try:
     from StringIO import StringIO
 except ImportError:

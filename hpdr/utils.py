@@ -1,10 +1,11 @@
-import utils.enums as enums
-from utils.enums import Level, Position
-from utils.classes import DatePart
+from . import enums
+from .enums import Level, Position
+from .models import DatePart
 from calendar import monthrange
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 import pendulum
+import re
 
 ZERO_BASED = {Level.HH, Level.MIN}
 
@@ -144,3 +145,34 @@ def level_to_datetime_unit(level):
     elif level == Level.MIN:
         return 'minutes'
     
+def datestr_to_dt(datestr, tz):
+    error = None
+    try:
+        if len(datestr) == 4:
+            dt = pendulum.Pendulum.create_from_format(datestr, '%Y', tz)
+        elif len(datestr) == 6:
+            dt = pendulum.Pendulum.create_from_format(datestr, '%Y%m', tz)
+        elif len(datestr) == 8:
+            dt = pendulum.Pendulum.create_from_format(datestr, '%Y%m%d', tz)
+        elif len(datestr) == 10:
+            dt = pendulum.Pendulum.create_from_format(datestr, '%Y%m%d%H', tz)
+        elif len(datestr) == 12:
+            dt = pendulum.Pendulum.create_from_format(datestr, '%Y%m%d%H%M', tz)
+        else:
+            error = 'Illegal datestr format [{0}]'.format(datestr)
+    except Exception as e:
+        error = 'Couldn\'t parse datestr [{0}]: {1}'.format(datestr, e)
+
+    if error:
+        raise ValueError(error)
+
+    return dt
+
+def deltastr_to_td(ds):
+    matched = re.match(r'^(\d+)(years|months|days|hours|minutes)$', ds)
+    if not matched:
+        raise ValueError('illegal slop value [{0}]'.format(ds))
+    kw = {}
+    kw[matched.group(2)] = int(matched.group(1))
+    return timedelta(**kw)
+

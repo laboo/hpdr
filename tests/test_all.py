@@ -1,23 +1,21 @@
 import pytest
 import pendulum
 from datetime import datetime
-from .context import dtu
-from .context import hpdr
-from .context import parse
+from hpdr import parse, utils, api
 from random import randint
 
 def durations_match(c, dt1, dt2):
-    calc = dtu.duration(c)
+    calc = utils.duration(c)
     real = (dt2 - dt1).total_seconds()
     assert real == calc, 'real duration ({}) != calculated duration ({})'.format(real, calc)
 
 def all(dt1, dt2):
-    c = hpdr.build_range(dt1, dt2)
-    p = c.build_display(pretty=True)
-    d = c.build_display(pretty=False)
+    r = api.build(dt1, dt2).get_partition_range()
+    p = r.build_display(pretty=True)
+    d = r.build_display(pretty=False)
     print(d)
     print(p)
-    durations_match(c, dt1, dt2)
+    durations_match(r, dt1, dt2)
     assert parse.parse(parse.tokenize(p))
     assert parse.parse(parse.tokenize(d))
 
