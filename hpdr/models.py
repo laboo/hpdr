@@ -14,6 +14,7 @@ import copy
 import attr
 import pytz
 from datetime import datetime, timedelta
+from six import string_types
 
 @attr.s(cmp=False)
 class Condition(object):
@@ -215,7 +216,7 @@ class Spec(object):
                 return zone.localize(dt)
             else:
                 return dt
-        elif type(dt) is str:
+        elif isinstance(dt, string_types):
             return utils.datestr_to_dt(dt, zone_str)
         else: # This handle Pendulum datetimes which are never naive (ie, always have timezones)
             return dt
