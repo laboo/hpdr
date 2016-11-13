@@ -30,8 +30,12 @@ def main(args):
     spec = hpdr.build(args.begin,
                       args.end,
                       **kw)
-                      
-    print(spec.get_partition_range().build_display(pretty=args.pretty))
+
+    if args.file:
+        query = open(args.file, 'r').read()
+        print(spec.substitute(query, args.verbose, args.pretty))
+    else:
+        print(spec.get_partition_range().build_display(pretty=args.pretty))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='hpdr -- Hive Partition Date Range')
@@ -40,8 +44,9 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--slop', required=False, help='extra duration to add to end time in \d+(years|months|days|hours|minutes) format.')
     parser.add_argument('-z', '--tz', required=False, help='input time zone for begin and end times in tzdata format, e.g. Asia/Katmandu. Defaults to UTC.')
     parser.add_argument('-o', '--otz', required=False, help='output time zone for begin and end times in tzdata format, e.g. Asia/Katmandu. Defaults to UTC.')
-    parser.add_argument('-p', '--pretty', action='store_true')
+    parser.add_argument('-p', '--pretty', action='store_true', help='pretty print output. Not relevant if --file option specified.')
     parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-f', '--file', help="File to perform substitution on.")
     parser.add_argument('--years', required=False, default='YYYY', help='display symbols for years.')
     parser.add_argument('--months', required=False, default='MM', help='display symbols for months.')
     parser.add_argument('--days', required=False, default='DD', help='display symbols for days.')

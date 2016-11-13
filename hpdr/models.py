@@ -15,6 +15,10 @@ import attr
 import pytz
 from datetime import datetime, timedelta
 from six import string_types
+from collections import OrderedDict
+from string import Template
+import tabulate
+import sys
 
 @attr.s(cmp=False)
 class Condition(object):
@@ -299,9 +303,10 @@ class Spec(object):
     def get_partition_range(self):
         return self.partition_range
 
-    def formats_for_datetime(prefix, dt):
+    def formats_for_datetime(self, prefix, dt):
         formats = []
         formats.append((prefix + '_unixtime', dt.strftime('%s')))
+        formats.append((prefix + '_unixtime_ms', dt.strftime('%s000')))
         formats.append((prefix + '_yyyy', dt.format('%Y')))
         formats.append((prefix + '_mm', dt.format('%m')))
         formats.append((prefix + '_dd', dt.format('%d')))
@@ -310,7 +315,7 @@ class Spec(object):
         formats.append((prefix + '_sec', dt.format('%S')))
         return formats
 
-    def comment_out(text):
+    def comment_out(self, text):
         out = ''
         for line in text.split('\n'):
             out += '-- ' + line + '\n'
@@ -320,22 +325,16 @@ class Spec(object):
                    query,
                    verbose=False,
                    pretty=False):
-    
+        TIMESTAMP_PATTERN = '%Y-%m-%d %H:%M:%S'
         hpdr = self.partition_range.build_display(pretty=False)
         hpdr_pretty = self.partition_range.build_display(pretty=True)
-        utc_begin = xxx
-        utc_end = yyy
         formats_list = []
-        formats_list.append(('begin_ts', self.begin.format('%Y-%m-%d %H:%M:%S')))
-        formats_list.append(('end_ts', self.end.format('%Y-%m-%d %H:%M:%S')))
-        formats_list.append(('slop_end_ts', self.slop_end.format('%Y-%m-%d %H:%M:%S')))
-        formats_list.append(('utc_begin_ts', utc_begin.format('%Y-%m-%d %H:%M:%S')))
-        formats_list.append(('utc_end_ts', utc_end.format('%Y-%m-%d %H:%M:%S')))
-        formats_list += formats_for_datetime('begin', self.begin)
-        formats_list += formats_for_datetime('end', self.end)
-        formats_list += formats_for_datetime('utc_begin', utc_begin)
-        formats_list += formats_for_datetime('utc_end', utc_end)
-        formats_list += formats_for_datetime('slop_end', self.slop_end)
+        formats_list.append(('begin_ts', self.begin.format(TIMESTAMP_PATTERN)))
+        formats_list.append(('end_ts', self.end.format(TIMESTAMP_PATTERN)))
+        formats_list.append(('slop_end_ts', self.slop_end.format(TIMESTAMP_PATTERN)))
+        formats_list += self.formats_for_datetime('begin', self.begin)
+        formats_list += self.formats_for_datetime('end', self.end)
+        formats_list += self.formats_for_datetime('slop_end', self.slop_end)
         formats = OrderedDict(formats_list)
 
         # Build this table first, when it doesn't have $hpdr in it yet, cause it doesn't print well
@@ -365,11 +364,11 @@ class Spec(object):
                 out += '--\n'
                 out += '-- Input:\n'
                 out += '---------\n'
-                out += comment_out(template)
+                out += self.comment_out(template)
                 out += '----------\n'
                 out += '-- Output:\n'
                 out += '----------\n'
-                out += comment_out(filled)
+                out += self.comment_out(filled)
                 out += '----------\n'
             out += '--\n'
             out += '-- This is a complete list of the available template variables and their values:\n'
