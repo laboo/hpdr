@@ -177,9 +177,10 @@ def datestr_to_dt(datestr, tz):
     return dt
 
 def deltastr_to_td(ds):
-    matched = re.match(r'^(\d+)(years|months|days|hours|minutes)$', ds)
+    pattern = r'^(\d+)(years|months|days|hours|minutes)$'
+    matched = re.match(pattern, ds)
     if not matched:
-        raise ValueError('illegal slop value [{0}]'.format(ds))
+        raise ValueError('illegal slop value [{0}] Must match {1}'.format(ds, pattern))
     kw = {}
     kw[matched.group(2)] = int(matched.group(1))
     return timedelta(**kw)
