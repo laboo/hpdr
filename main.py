@@ -5,7 +5,7 @@ from __future__ import division
 from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
-import hpdr
+from hpdr import api
 import argparse
 
 
@@ -20,9 +20,9 @@ def main(args):
     if args.hours: kw['hours'] = args.hours
     if args.minutes: kw['minutes'] = args.minutes
     
-    spec = hpdr.build(args.begin,
-                      args.end,
-                      **kw)
+    spec = api.build(args.begin,
+                     args.end,
+                     **kw)
 
     if args.file:
         query = open(args.file, 'r').read()
