@@ -11,7 +11,6 @@ from .enums import Level, Position
 from .models import DatePart
 from calendar import monthrange
 from datetime import timedelta
-from dateutil.relativedelta import relativedelta
 import pendulum
 import re
 

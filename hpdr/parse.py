@@ -9,7 +9,7 @@ try:
 except ImportError:
     from io import StringIO
 from tokenize import generate_tokens, NL
-import operator, token
+import token
 from funcparserlib.parser import (some, a, oneplus, many, skip,
                                   finished, maybe, with_forward_decls,
                                   NoParseError)

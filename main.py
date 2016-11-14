@@ -6,14 +6,7 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 import hpdr
-from string import Template
-from collections import OrderedDict
-from datetime import datetime
-import sys
 import argparse
-import pendulum
-import re
-import tabulate
 
 
 def main(args):
