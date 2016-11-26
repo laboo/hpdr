@@ -18,7 +18,7 @@ import string
 SIGNS = ('<', '<=', '=', '>=', '>')
 UNITS = ('YYYY', 'MM', 'DD', 'HH', 'MIN')
 DIGITS = [x for x in string.digits]
-#DIGITS = oneplus(some(lambda c: c.isdigit()))
+
 class Token(object):
     def __init__(self, code, value, start=(0, 0), stop=(0, 0), line=''):
         self.code = code
@@ -40,16 +40,27 @@ class Token(object):
         return (self.code, self.value) == (other.code, other.value)
 
 def tokenize(s):
-    'str -> [Token]'
+    '''Turns the string s into a list of Token objects 
+       using the Python source code tokenizer.
+       str -> [Token]
+    '''
     return list(Token(*t)
                 for t in generate_tokens(StringIO(s).readline)
                 if t[0] not in [token.NEWLINE, NL])
 
 def parse(tokens):
+    '''Parses a list of Token object to see if it's a valid SQL
+       clause meeting the following conditions:
+       An optional sequence of ANDed simple conditions ANDed with 
+       an optional sequence of ORed complex condtions.
+       Where a simple condition is a date unit, a sign, and a date value.
+       And a complex condition is any legal SQL combination of simple
+       condtions ANDed or ORed together.
+       Date unit: YYYY, MM, DD, HH, MIN
+       Sign: <, <=, =, >=, >
+       Date value: any integer value, with an optional leading zero
+    '''
     try:
-        for t in tokens:
-            #print(t)
-            pass
         left_paren = some(lambda t: t.value in ('('))
         right_paren = some(lambda t: t.value in (')'))
         op = some(lambda t: t.value in SIGNS)
@@ -67,19 +78,13 @@ def parse(tokens):
         ors_without_ands = or_ands + maybe(many(a(Token(token.NAME,'OR')) + or_ands))
         ors_with_ands = a(Token(token.NAME,'AND')) + left_paren + or_ands + maybe(many(a(Token(token.NAME,'OR')) + or_ands)) + right_paren
         ors = maybe(ors_without_ands | ors_with_ands)
-        # ors = maybe(a(Token(token.NAME,'AND')) + left_paren + or_ands + maybe(many(a(Token(token.NAME,'OR')) + or_ands) + right_paren))
         full = left_paren + ands + ors + right_paren + end
         
         full.parse(tokens)
     except NoParseError as npe:
-        print(npe)
+        return False
+    except TokenError as te:
         return False
     return True
         
-#print(parse(tokenize("(MM>15)")))
-#print(parse(tokenize("(MM>15 AND HH=3)")))
-#print(parse(tokenize("(MM>15 AND DD=3 AND MIN=1 )")))
-#print(parse(tokenize("(MM>15 AND DD=3 AND MIN=1 AND ((HH=04 AND MM=4) OR (MM=1 AND HH=5) OR (MM=2)))")))
-#print(parse(tokenize("(YYYY=2018 AND MM=12 AND ((DD=2 AND HH=3 AND MIN>=4) OR (DD=2 AND HH>3) OR (DD>2 AND DD<5)))")))
-#print(parse(tokenize("MM>15 (AND)")))
 
