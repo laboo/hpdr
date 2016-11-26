@@ -16,6 +16,22 @@ def build(begin,
           days='DD',
           hours='HH',
           minutes='MIN'):
+    """Build a specification for a date range.
+
+    :param begin: begin date of range, a datetime or yyyymmddmmss string
+    :param end: end date of range, a datetime or yyyymmddmmss string
+    :param izone: (optional) time zone for begin date, defaults to UTC
+    :param ozone: (optional) time zone for end date, defaults to UTC
+    :param slop: (optional) duration to add to end date for partition specification,
+                            specified as \d+[years|months|days|hours|minutes],
+                            for example, 5hours
+    :param years: (optional) name for years partition, defaults to YYYY
+    :param day: (optional) name for days partition, defaults to DD
+    :param hours: (optional) name for hours partition, defaults to HH
+    :param minutes: (optional) name for hours partition, defaults to MIN
+    :return: :class:`Spec` object representing the date range
+    :rtype: :class:`Spec`
+    """
 
     kw = {}
     if izone: kw['izone'] = izone
