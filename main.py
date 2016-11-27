@@ -11,8 +11,8 @@ import argparse
 
 def main(args):
     kw = {}
-    if args.tz: kw['tz'] = args.tz
-    if args.otz: kw['otz'] = args.otz
+    if args.tz: kw['izone'] = args.tz
+    if args.qtz: kw['qzone'] = args.qtz
     if args.slop: kw['slop'] = args.slop
     if args.years: kw['years'] = args.years
     if args.months: kw['months'] = args.months
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', required=True, help='end time, exclusive, in YYYY[[MM][[DD][HH][NN]]] format.')
     parser.add_argument('-s', '--slop', required=False, help='extra duration to add to end time in \d+(years|months|days|hours|minutes) format.')
     parser.add_argument('-z', '--tz', required=False, help='input time zone for begin and end times in tzdata format, e.g. Asia/Katmandu. Defaults to UTC.')
-    parser.add_argument('-o', '--otz', required=False, help='output time zone for begin and end times in tzdata format, e.g. Asia/Katmandu. Defaults to UTC.')
+    parser.add_argument('-q', '--qtz', required=False, help='query time zone for begin and end times in tzdata format, e.g. Asia/Katmandu. Defaults to UTC.')
     parser.add_argument('-p', '--pretty', action='store_true', help='pretty print output. Not relevant if --file option specified.')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-f', '--file', help="File to perform substitution on.")

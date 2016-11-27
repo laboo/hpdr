@@ -9,7 +9,7 @@ from .models import Spec
 def build(begin,
           end,
           izone='UTC',
-          ozone='UTC',          
+          qzone='UTC',
           slop=None,
           years='YYYY',
           months='MM',
@@ -20,8 +20,8 @@ def build(begin,
 
     :param begin: begin date of range, a datetime or yyyymmddmmss string
     :param end: end date of range, a datetime or yyyymmddmmss string
-    :param izone: (optional) time zone for begin date, defaults to UTC
-    :param ozone: (optional) time zone for end date, defaults to UTC
+    :param izone: (optional) time zone for input dates, defaults to UTC
+    :param qzone: (optional) time zone to use in query, defaults to UTC
     :param slop: (optional) duration to add to end date for partition specification,
                             specified as \d+[years|months|days|hours|minutes],
                             for example, 5hours
@@ -35,7 +35,7 @@ def build(begin,
 
     kw = {}
     if izone: kw['izone'] = izone
-    if ozone: kw['ozone'] = ozone
+    if qzone: kw['qzone'] = qzone
     if slop: kw['slop'] = slop
     if years: kw['years'] = years
     if months: kw['months'] = months

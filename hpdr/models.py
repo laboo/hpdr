@@ -19,6 +19,7 @@ from collections import OrderedDict
 from string import Template
 import tabulate
 import sys
+import pendulum
 
 @attr.s(cmp=False)
 class Condition(object):
@@ -185,12 +186,11 @@ class DatePart(object):
 
 
 class Spec(object):
-
     def __init__(self,
                  begin,
                  end,
                  izone='UTC',
-                 ozone='UTC',
+                 qzone='UTC',
                  slop=None,
                  years='YYYY',
                  months='MM',
@@ -198,12 +198,10 @@ class Spec(object):
                  hours='HH',
                  minutes='MIN'):
         from . import utils
-                
-        in_zone = pytz.timezone(izone)
-        out_zone = pytz.timezone(ozone)
-        
-        self.begin = self._localize_dt(begin, in_zone, izone)
-        self.end = self._localize_dt(end, in_zone, izone)
+        self.izone = izone
+        self.qzone = qzone
+        self.begin = self._localize_dt(begin, izone, qzone)
+        self.end = self._localize_dt(end, izone, qzone)
         self.slop = slop if (not slop or (type(slop) is timedelta)) else utils.deltastr_to_td(slop)
         self.slop_end = (self.end + self.slop) if self.slop else self.end
         self.partition_range = self._build_range(self.begin, self.slop_end)
@@ -213,17 +211,24 @@ class Spec(object):
         Condition.set_display(Level.HH, hours)
         Condition.set_display(Level.MIN, minutes)
 
-    def _localize_dt(self, dt, zone, zone_str):
+    def _localize_dt(self, dt, i_zone_str, q_zone_str):
         from . import utils
-        if type(dt) is datetime:
-            if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
-                return zone.localize(dt)
-            else:
-                return dt
+        if type(dt) is pendulum.pendulum.Pendulum:
+            pass  # pendulum types are good
+        elif type(dt) is datetime:
+            dt =  pendulum.create(dt.year,
+                                  dt.month,
+                                  dt.day,
+                                  dt.hour,
+                                  dt.minute,
+                                  dt.second,
+                                  dt.microsecond,
+                                  i_zone_str if i_zone_str else 'UTC')
         elif isinstance(dt, string_types):
-            return utils.datestr_to_dt(dt, zone_str)
-        else: # This handle Pendulum datetimes which are never naive (ie, always have timezones)
-            return dt
+            dt = utils.datestr_to_dt(dt, i_zone_str)
+        else:
+            raise ValueError('Unrecognized datetime type: ' + type(dt))
+        return dt.in_timezone(q_zone_str if q_zone_str else 'UTC')
 
     # Could be a static method
     def _build_range(self, begin, end):
@@ -307,6 +312,7 @@ class Spec(object):
         formats = []
         formats.append((prefix + '_unixtime', dt.strftime('%s')))
         formats.append((prefix + '_unixtime_ms', dt.strftime('%s000')))
+        formats.append((prefix + '_yyyymmdd', dt.format('%Y%m%d')))
         formats.append((prefix + '_yyyy', dt.format('%Y')))
         formats.append((prefix + '_mm', dt.format('%m')))
         formats.append((prefix + '_dd', dt.format('%d')))
@@ -326,15 +332,18 @@ class Spec(object):
                    verbose=False,
                    pretty=False):
         TIMESTAMP_PATTERN = '%Y-%m-%d %H:%M:%S'
+        HPDR_PREFIX = 'HPDR_'
         hpdr = self.partition_range.build_display(pretty=False)
         hpdr_pretty = self.partition_range.build_display(pretty=True)
         formats_list = []
-        formats_list.append(('begin_ts', self.begin.format(TIMESTAMP_PATTERN)))
-        formats_list.append(('end_ts', self.end.format(TIMESTAMP_PATTERN)))
-        formats_list.append(('slop_end_ts', self.slop_end.format(TIMESTAMP_PATTERN)))
-        formats_list += self.formats_for_datetime('begin', self.begin)
-        formats_list += self.formats_for_datetime('end', self.end)
-        formats_list += self.formats_for_datetime('slop_end', self.slop_end)
+        formats_list.append((HPDR_PREFIX + 'izone', self.izone))
+        formats_list.append((HPDR_PREFIX + 'qzone', self.qzone))
+        formats_list.append((HPDR_PREFIX + 'begin_ts', self.begin.format(TIMESTAMP_PATTERN)))
+        formats_list.append((HPDR_PREFIX + 'end_ts', self.end.format(TIMESTAMP_PATTERN)))
+        formats_list.append((HPDR_PREFIX + 'slop_end_ts', self.slop_end.format(TIMESTAMP_PATTERN)))
+        formats_list += self.formats_for_datetime(HPDR_PREFIX + 'begin', self.begin)
+        formats_list += self.formats_for_datetime(HPDR_PREFIX + 'end', self.end)
+        formats_list += self.formats_for_datetime(HPDR_PREFIX + 'slop_end', self.slop_end)
         formats = OrderedDict(formats_list)
 
         # Build this table first, when it doesn't have $hpdr in it yet, cause it doesn't print well
@@ -344,8 +353,8 @@ class Spec(object):
             table  = tabulate.tabulate([(x,y) for x,y in formats.items()], headers=['variable', 'value'])
             for row in table.split('\n'):
                 table_with_comments += '-- ' + row + '\n'
-        formats['hpdr'] = hpdr
-        formats['hpdr_pretty'] = hpdr_pretty
+        formats[HPDR_PREFIX + 'range'] = hpdr
+        formats[HPDR_PREFIX + 'range_pretty'] = hpdr_pretty
         if query:
             template = query
         else:
