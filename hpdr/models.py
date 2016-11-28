@@ -200,8 +200,8 @@ class Spec(object):
         from . import utils
         self.izone = izone
         self.qzone = qzone
-        self.begin = self._localize_dt(begin, izone, qzone)
-        self.end = self._localize_dt(end, izone, qzone)
+        self.begin = self._shift_dt(begin, izone, qzone)
+        self.end = self._shift_dt(end, izone, qzone)
         self.slop = slop if (not slop or (type(slop) is timedelta)) else utils.deltastr_to_td(slop)
         self.slop_end = (self.end + self.slop) if self.slop else self.end
         self.partition_range = self._build_range(self.begin, self.slop_end)
@@ -211,11 +211,13 @@ class Spec(object):
         Condition.set_display(Level.HH, hours)
         Condition.set_display(Level.MIN, minutes)
 
-    def _localize_dt(self, dt, i_zone_str, q_zone_str):
+    def _shift_dt(self, dt, i_zone_str, q_zone_str):
         from . import utils
         if type(dt) is pendulum.pendulum.Pendulum:
             pass  # pendulum types are good
         elif type(dt) is datetime:
+            if dt.tzinfo is not None:
+                raise ValueError('Only naive datetime.datetimes allowed, don''t set tzinfo')
             dt =  pendulum.create(dt.year,
                                   dt.month,
                                   dt.day,
