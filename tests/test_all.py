@@ -16,12 +16,12 @@ def durations_match(c, dt1, dt2):
     assert real == calc, 'real duration ({}) != calculated duration ({})'.format(real, calc)
 
 def all(dt1, dt2):
-    r = api.build(dt1, dt2).get_partition_range()
-    p = r.build_display(pretty=True)
-    d = r.build_display(pretty=False)
+    rng = api.build(dt1, dt2).get_partition_range()
+    p = rng.build_display(pretty=True)
+    d = rng.build_display(pretty=False)
     print(d)
     print(p)
-    durations_match(r, dt1, dt2)
+    durations_match(rng, dt1, dt2)
     assert parse.parse(parse.tokenize(p))
     assert parse.parse(parse.tokenize(d))
 

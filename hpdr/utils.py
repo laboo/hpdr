@@ -1,18 +1,20 @@
+# pylint: disable=redefined-builtin
+
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
+from calendar import monthrange
+from datetime import timedelta
+import re
 from builtins import int
 from builtins import str
+import pendulum
 from future import standard_library
-standard_library.install_aliases()
 from . import enums
 from .enums import Level, Position
 from .models import DatePart
-from calendar import monthrange
-from datetime import timedelta
-import pendulum
-import re
+standard_library.install_aliases()
 
 ZERO_BASED = {Level.HH, Level.MIN}
 
@@ -20,63 +22,63 @@ def adjust(level, value):
     adjusted = value if level in ZERO_BASED else value - 1
     return adjusted
 
-def add_condition_to_datetimes(c, p, early, late):
-    level = level_to_datetime_unit(c.level)
-    if c.sign == '=':
-        early = add_to_datetime(early, level, adjust(c.level, c.value))
-        late = add_to_datetime(late, level, adjust(c.level, c.value))
-    elif p == Position.left:
-        if c.sign == '>':
-            early = add_to_datetime(early, level, adjust(c.level, c.value) + 1)
-        elif c.sign == '>=':
-            early = add_to_datetime(early, level, adjust(c.level, c.value))
-        late = add_to_datetime(late, level, adjust(c.level, get_max(c.level, late) + 1))
-    elif p == Position.right:
-        early = add_to_datetime(early, level, adjust(c.level, get_min(c.level)))
-        if c.sign == '<':
-            late = add_to_datetime(late, level, adjust(c.level, c.value))
-        elif c.sign == '<=':
-            late = add_to_datetime(late, level, adjust(c.level, c.value) + 1)
-    elif p == Position.middle:
-        if c.sign == '<':
-            late = add_to_datetime(late, level, adjust(c.level, c.value))
-        elif c.sign == '>':
-            early = add_to_datetime(early, level, adjust(c.level, c.value) + 1)
-        elif c.sign == '>=':
-            early = add_to_datetime(early, level, adjust(c.level, c.value))
-    return (early,late)
+def add_condition_to_datetimes(cnd, pos, early, late):
+    level = level_to_datetime_unit(cnd.level)
+    if cnd.sign == '=':
+        early = add_to_datetime(early, level, adjust(cnd.level, cnd.value))
+        late = add_to_datetime(late, level, adjust(cnd.level, cnd.value))
+    elif pos == Position.left:
+        if cnd.sign == '>':
+            early = add_to_datetime(early, level, adjust(cnd.level, cnd.value) + 1)
+        elif cnd.sign == '>=':
+            early = add_to_datetime(early, level, adjust(cnd.level, cnd.value))
+        late = add_to_datetime(late, level, adjust(cnd.level, get_max(cnd.level, late) + 1))
+    elif pos == Position.right:
+        early = add_to_datetime(early, level, adjust(cnd.level, get_min(cnd.level)))
+        if cnd.sign == '<':
+            late = add_to_datetime(late, level, adjust(cnd.level, cnd.value))
+        elif cnd.sign == '<=':
+            late = add_to_datetime(late, level, adjust(cnd.level, cnd.value) + 1)
+    elif pos == Position.middle:
+        if cnd.sign == '<':
+            late = add_to_datetime(late, level, adjust(cnd.level, cnd.value))
+        elif cnd.sign == '>':
+            early = add_to_datetime(early, level, adjust(cnd.level, cnd.value) + 1)
+        elif cnd.sign == '>=':
+            early = add_to_datetime(early, level, adjust(cnd.level, cnd.value))
+    return (early, late)
 
-def duration(r):
+def duration(rng):
     seconds = 0
-    early = pendulum.create(1,1,1,0,0,0)
-    late = pendulum.create(1,1,1,0,0,0)
+    early = pendulum.create(1, 1, 1, 0, 0, 0)
+    late = pendulum.create(1, 1, 1, 0, 0, 0)
     smallest_and_level = None
-    for an_and in sorted(r.ands):
+    for an_and in sorted(rng.ands):
         smallest_and_level = an_and.level
         (early, late) = add_condition_to_datetimes(an_and, None, early, late)
-    if len(r.ors) == 0:
+    if len(rng.ors) == 0:
         late = add_to_datetime(late,
-                                   level_to_datetime_unit(smallest_and_level),
-                                   1)
+                               level_to_datetime_unit(smallest_and_level),
+                               1)
         seconds += (late - early).total_seconds()
     else:
-        for g in r.ors:
-            e = early.copy()
-            l = late.copy()
-            for c in sorted(g):
-                (e, l) = add_condition_to_datetimes(c, g.position, e, l)
-                if len(g) == 1 and c.sign == '=':
-                    l = add_to_datetime(l,
-                                        level_to_datetime_unit(c.level),
-                                        1)
-            secs = (l - e).total_seconds()
-            assert secs > 0, 'vaccuous condition in group ' + str(g)
+        for grp in rng.ors:
+            erly = early.copy()
+            lte = late.copy()
+            for cnd in sorted(grp):
+                (erly, lte) = add_condition_to_datetimes(cnd, grp.position, erly, lte)
+                if len(grp) == 1 and cnd.sign == '=':
+                    lte = add_to_datetime(lte,
+                                          level_to_datetime_unit(cnd.level),
+                                          1)
+            secs = (lte - erly).total_seconds()
+            assert secs > 0, 'vaccuous condition in group ' + str(grp)
             seconds += secs
     return seconds
 
-def add_to_datetime(dt, unit, value):
-    kw = {unit: value}
-    return dt.add(**kw)
+def add_to_datetime(dtime, unit, value):
+    keywords = {unit: value}
+    return dtime.add(**keywords)
 
 
 def get_min(level):
@@ -91,13 +93,13 @@ def get_min(level):
     elif level == Level.MIN:
         return 0
 
-def get_max(level, dt):
+def get_max(level, dtime):
     if level == Level.YYYY:
         return 9999
     elif level == Level.MM:
         return 12
     elif level == Level.DD:
-        return monthrange(dt.date().year, dt.date().month)[1]
+        return monthrange(dtime.date().year, dtime.date().month)[1]
     elif level == Level.HH:
         return 23
     elif level == Level.MIN:
@@ -106,37 +108,37 @@ def get_max(level, dt):
 def at_min(level, value):
     return get_min(level) == value
 
-def at_max(level, dt, value):
-    return get_max(level, dt) == value
+def at_max(level, dtime, value):
+    return get_max(level, dtime) == value
 
-def dt_value_for_level(dt, level):
+def dt_value_for_level(dtime, level):
     if level == Level.YYYY:
-        return dt.year
+        return dtime.year
     elif level == Level.MM:
-        return dt.month
+        return dtime.month
     elif level == Level.DD:
-        return dt.day
+        return dtime.day
     elif level == Level.HH:
-        return dt.hour
+        return dtime.hour
     elif level == Level.MIN:
-        return dt.minute
-    
-def level_followed_by_all_mins(dt):
-    return_level = Level.MIN  # TODO get lowest level
-    for level in reversed(enums.Level):
+        return dtime.minute
+
+def level_followed_by_all_mins(dtime):
+    return_level = Level.MIN  # get lowest level to make it dynamic
+    for level in reversed(list(enums.Level)):
         return_level = level
-        if not at_min(level, dt_value_for_level(dt, level)):
+        if not at_min(level, dt_value_for_level(dtime, level)):
             break
     return return_level
 
-def datetime_to_dateparts(dt):
+def datetime_to_dateparts(dtime):
     parts = []
-    smallest_non_min = level_followed_by_all_mins(dt)
+    smallest_non_min = level_followed_by_all_mins(dtime)
     for level in enums.Level:
         parts.append(DatePart(level,
-                              dt_value_for_level(dt, level),
+                              dt_value_for_level(dtime, level),
                               get_min(level),
-                              get_max(level,dt),
+                              get_max(level, dtime),
                               smallest_non_min <= level))
     return parts
 
@@ -151,36 +153,35 @@ def level_to_datetime_unit(level):
         return 'hours'
     elif level == Level.MIN:
         return 'minutes'
-    
-def datestr_to_dt(datestr, tz):
+
+def datestr_to_dt(datestr, tzone):
     error = None
     try:
         if len(datestr) == 4:
-            dt = pendulum.Pendulum.create_from_format(datestr, '%Y', tz)
+            dtime = pendulum.Pendulum.create_from_format(datestr, '%Y', tzone)
         elif len(datestr) == 6:
-            dt = pendulum.Pendulum.create_from_format(datestr, '%Y%m', tz)
+            dtime = pendulum.Pendulum.create_from_format(datestr, '%Y%m', tzone)
         elif len(datestr) == 8:
-            dt = pendulum.Pendulum.create_from_format(datestr, '%Y%m%d', tz)
+            dtime = pendulum.Pendulum.create_from_format(datestr, '%Y%m%d', tzone)
         elif len(datestr) == 10:
-            dt = pendulum.Pendulum.create_from_format(datestr, '%Y%m%d%H', tz)
+            dtime = pendulum.Pendulum.create_from_format(datestr, '%Y%m%d%H', tzone)
         elif len(datestr) == 12:
-            dt = pendulum.Pendulum.create_from_format(datestr, '%Y%m%d%H%M', tz)
+            dtime = pendulum.Pendulum.create_from_format(datestr, '%Y%m%d%H%M', tzone)
         else:
             error = 'Illegal datestr format [{0}]'.format(datestr)
-    except Exception as e:
-        error = 'Couldn\'t parse datestr [{0}]: {1}'.format(datestr, e)
+    except ValueError as exn:
+        error = 'Couldn\'t parse datestr [{0}]: {1}'.format(datestr, exn)
 
     if error:
         raise ValueError(error)
 
-    return dt
+    return dtime
 
-def deltastr_to_td(ds):
+def deltastr_to_td(deltastr):
     pattern = r'^(\d+)(years|months|days|hours|minutes)$'
-    matched = re.match(pattern, ds)
+    matched = re.match(pattern, deltastr)
     if not matched:
-        raise ValueError('illegal slop value [{0}] Must match {1}'.format(ds, pattern))
-    kw = {}
-    kw[matched.group(2)] = int(matched.group(1))
-    return timedelta(**kw)
-
+        raise ValueError('illegal slop value [{0}] Must match {1}'.format(deltastr, pattern))
+    keywords = {}
+    keywords[matched.group(2)] = int(matched.group(1))
+    return timedelta(**keywords)

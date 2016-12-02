@@ -2,18 +2,18 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
-from future import standard_library
-standard_library.install_aliases()
+import token
+import string
 try:
     from io import StringIO
 except ImportError:
     from io import StringIO
-from tokenize import generate_tokens, NL
-import token
-from funcparserlib.parser import (some, a, oneplus, many, skip,
-                                  finished, maybe, with_forward_decls,
-                                  NoParseError)
-import string
+from tokenize import generate_tokens, NL, TokenError
+from future import standard_library
+from funcparserlib.parser import (some, a, many, skip, finished, maybe, NoParseError)
+standard_library.install_aliases()
+
+# pylint: disable=too-many-arguments, too-many-locals, too-few-public-methods
 
 SIGNS = ('<', '<=', '=', '>=', '>')
 UNITS = ('YYYY', 'MM', 'DD', 'HH', 'MIN')
@@ -39,19 +39,19 @@ class Token(object):
     def __eq__(self, other):
         return (self.code, self.value) == (other.code, other.value)
 
-def tokenize(s):
-    '''Turns the string s into a list of Token objects 
+def tokenize(a_string):
+    '''Turns the string a_string into a list of Token objects
        using the Python source code tokenizer.
        str -> [Token]
     '''
     return list(Token(*t)
-                for t in generate_tokens(StringIO(s).readline)
+                for t in generate_tokens(StringIO(a_string).readline)
                 if t[0] not in [token.NEWLINE, NL])
 
 def parse(tokens):
     '''Parses a list of Token object to see if it's a valid SQL
        clause meeting the following conditions:
-       An optional sequence of ANDed simple conditions ANDed with 
+       An optional sequence of ANDed simple conditions ANDed with
        an optional sequence of ORed complex condtions.
        Where a simple condition is a date unit, a sign, and a date value.
        And a complex condition is any legal SQL combination of simple
@@ -61,30 +61,29 @@ def parse(tokens):
        Date value: any integer value, with an optional leading zero
     '''
     try:
-        left_paren = some(lambda t: t.value in ('('))
-        right_paren = some(lambda t: t.value in (')'))
-        op = some(lambda t: t.value in SIGNS)
+        left_paren = some(lambda t: t.value in '(')
+        right_paren = some(lambda t: t.value in ')')
+        oper = some(lambda t: t.value in SIGNS)
         unit = some(lambda t: t.value in UNITS)
         padded_num = some(lambda t: t.code == 2) + some(lambda t: t.code == 2) # hmmm, better way???
         raw_num = some(lambda t: t.code == 2)
         num = padded_num | raw_num
-        cond = unit + op + num
+        cond = unit + oper + num
 
         endmark = a(Token(token.ENDMARKER, ''))
         end = skip(endmark + finished)
 
-        ands = maybe(cond + maybe(many(a(Token(token.NAME,'AND')) + cond)))
+        ands = maybe(cond + maybe(many(a(Token(token.NAME, 'AND')) + cond)))
         or_ands = left_paren + ands + right_paren
-        ors_without_ands = or_ands + maybe(many(a(Token(token.NAME,'OR')) + or_ands))
-        ors_with_ands = a(Token(token.NAME,'AND')) + left_paren + or_ands + maybe(many(a(Token(token.NAME,'OR')) + or_ands)) + right_paren
+        ors_without_ands = or_ands + maybe(many(a(Token(token.NAME, 'OR')) + or_ands))
+        ors_with_ands = (a(Token(token.NAME, 'AND')) + left_paren + or_ands +
+                         maybe(many(a(Token(token.NAME, 'OR')) + or_ands)) + right_paren)
         ors = maybe(ors_without_ands | ors_with_ands)
         full = left_paren + ands + ors + right_paren + end
-        
+
         full.parse(tokens)
-    except NoParseError as npe:
+    except NoParseError:
         return False
-    except TokenError as te:
+    except TokenError:
         return False
     return True
-        
-

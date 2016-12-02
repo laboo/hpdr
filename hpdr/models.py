@@ -1,3 +1,5 @@
+# pylint: disable=redefined-builtin, too-few-public-methods, no-member,too-many-branches
+# pylint: disable=too-many-arguments, too-many-locals
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
@@ -6,20 +8,19 @@ from builtins import range
 from builtins import zip
 from builtins import int
 from builtins import str
-from future import standard_library
-standard_library.install_aliases()
 from builtins import object
-from .enums import Level, Position
-import copy
-import attr
-import pytz
 from datetime import datetime, timedelta
-from six import string_types
-from collections import OrderedDict
 from string import Template
-import tabulate
+from collections import OrderedDict
+import copy
 import sys
+import attr
+import tabulate
 import pendulum
+from future import standard_library
+from six import string_types
+from .enums import Level, Position
+standard_library.install_aliases()
 
 @attr.s(cmp=False)
 class Condition(object):
@@ -32,14 +33,17 @@ class Condition(object):
     @staticmethod
     def set_display(level, value):
         Condition.display[level] = value
-        
-    def _zero_padded_value(self, value):
+
+    @staticmethod
+    def _zero_padded_value(value):
         if len(str(value)) == 1:
             return '0' + str(value)
         else:
             return str(value)
+
     def __str__(self):
-        return ((Condition.display[self.level] if self.level in Condition.display else self.level.name)
+        return ((Condition.display[self.level]
+                 if self.level in Condition.display else self.level.name)
                 + self.sign
                 + self._zero_padded_value(self.value))
     def __eq__(self, other):
@@ -80,7 +84,8 @@ class ConditionsGroup(object):
     def __len__(self):
         return len(self.conditions)
     def __eq__(self, other):
-        return self.position == other.position and sorted(self.conditions) == sorted(other.conditions)
+        return (self.position == other.position and
+                sorted(self.conditions) == sorted(other.conditions))
     def __ne__(self, other):
         return self != other
     def __lt__(self, other):
@@ -108,7 +113,6 @@ class ConditionsGroup(object):
     def __ge__(self, other):
         return (self > other) or (self == other)
 
-    
 @attr.s
 class Range(object):
     ands = attr.ib(validator=attr.validators.instance_of(list))  # list of Condition
@@ -123,8 +127,8 @@ class Range(object):
         ors = copy.deepcopy(self.ors)
         ands = copy.deepcopy(self.ands)
         if (len(ors) == 1 and
-            len(ors[0].conditions) == 1 and
-            ors[0].conditions[0].sign == '='):
+                len(ors[0].conditions) == 1 and
+                ors[0].conditions[0].sign == '='):
             the_only_group = ors.pop()
             the_only_condition = the_only_group.conditions.pop()
             ands.append(the_only_condition)
@@ -138,7 +142,8 @@ class Range(object):
                 if ands:
                     out += ' AND\n (\n'
                 for ors_group in sorted(ors):
-                    ors_str_group = ' AND '.join('{0}'.format(x) for x in sorted(ors_group.conditions))
+                    ors_str_group = ' AND '.join('{0}'.format(x)
+                                                 for x in sorted(ors_group.conditions))
                     ors_str_groups.append(ors_str_group)
                 for i, group in enumerate(ors_str_groups):
                     if i == 0:
@@ -158,16 +163,17 @@ class Range(object):
                 if ands:
                     ands_str += (' AND ')
                 for ors_group in sorted(ors):
-                    ors_str_group = ' AND '.join('{0}'.format(x) for x in sorted(ors_group.conditions))
+                    ors_str_group = ' AND '.join('{0}'.format(x)
+                                                 for x in sorted(ors_group.conditions))
                     ors_str_groups.append(ors_str_group)
-                    ors_str = ' OR '.join(('({0})' if len(ors) > 1 else '{0}').format(x) for x in ors_str_groups)
+                    ors_str = ' OR '.join(('({0})' if len(ors) > 1 else '{0}').format(x)
+                                          for x in ors_str_groups)
                 if len(ors) > 1:
                     ors_str = '(' + ors_str + ')'
             if ands or len(ors) == 1:
                 out = '(' + ands_str + ors_str + ')'
             else:
                 out = ands_str + ors_str
-            
         return out
 
 @attr.s
@@ -200,40 +206,42 @@ class Spec(object):
         from . import utils
         self.izone = izone
         self.qzone = qzone
-        self.begin = self._shift_dt(begin, izone, qzone)
-        self.end = self._shift_dt(end, izone, qzone)
-        self.slop = slop if (not slop or (type(slop) is timedelta)) else utils.deltastr_to_td(slop)
+        self.begin = Spec._shift_dt(begin, izone, qzone)
+        self.end = Spec._shift_dt(end, izone, qzone)
+        not_a_delta_str = (not slop or (isinstance(slop, timedelta)))
+        self.slop = slop if not_a_delta_str else utils.deltastr_to_td(slop)
         self.slop_end = (self.end + self.slop) if self.slop else self.end
-        self.partition_range = self._build_range(self.begin, self.slop_end)
+        self.partition_range = Spec._build_range(self.begin, self.slop_end)
         Condition.set_display(Level.YYYY, years)
         Condition.set_display(Level.MM, months)
         Condition.set_display(Level.DD, days)
         Condition.set_display(Level.HH, hours)
         Condition.set_display(Level.MIN, minutes)
 
-    def _shift_dt(self, dt, i_zone_str, q_zone_str):
+    @staticmethod
+    def _shift_dt(dtime, i_zone_str, q_zone_str):
         from . import utils
-        if type(dt) is pendulum.pendulum.Pendulum:
+        if isinstance(dtime, pendulum.pendulum.Pendulum):
             pass  # pendulum types are good
-        elif type(dt) is datetime:
-            if dt.tzinfo is not None:
+        elif isinstance(dtime, datetime):
+            if dtime.tzinfo is not None:
                 raise ValueError('Only naive datetime.datetimes allowed, don''t set tzinfo')
-            dt =  pendulum.create(dt.year,
-                                  dt.month,
-                                  dt.day,
-                                  dt.hour,
-                                  dt.minute,
-                                  dt.second,
-                                  dt.microsecond,
-                                  i_zone_str if i_zone_str else 'UTC')
-        elif isinstance(dt, string_types):
-            dt = utils.datestr_to_dt(dt, i_zone_str)
+            dtime = pendulum.create(dtime.year,
+                                    dtime.month,
+                                    dtime.day,
+                                    dtime.hour,
+                                    dtime.minute,
+                                    dtime.second,
+                                    dtime.microsecond,
+                                    i_zone_str if i_zone_str else 'UTC')
+        elif isinstance(dtime, string_types):
+            dtime = utils.datestr_to_dt(dtime, i_zone_str)
         else:
-            raise ValueError('Unrecognized datetime type: ' + type(dt))
-        return dt.in_timezone(q_zone_str if q_zone_str else 'UTC')
+            raise ValueError('Unrecognized datetime type: ' + type(dtime))
+        return dtime.in_timezone(q_zone_str if q_zone_str else 'UTC')
 
-    # Could be a static method
-    def _build_range(self, begin, end):
+    @staticmethod
+    def _build_range(begin, end):
         from . import utils
         ands = []
         ors = []
@@ -243,30 +251,33 @@ class Spec(object):
         bli = None  # bridge_level_index
 
         #  Build the ANDs
-        for i, (p1, p2) in enumerate(zip(parts1, parts2)):
+        for i, (part1, part2) in enumerate(zip(parts1, parts2)):
             bli = i
-            if p1.value == p2.value:
-                ands.append(Condition(p1.level, '=', p1.value, p1.max_value))
+            if part1.value == part2.value:
+                ands.append(Condition(part1.level, '=', part2.value, part1.max_value))
             else:
                 break
 
         if finished:
             return Range(ands, ors)
-    
+
         # Build the ORs
         # First the bridge, if there is one
         if bli is not None:
             if (parts2[bli].value - parts1[bli].value) > 1:
                 bridge = ConditionsGroup(Position.middle)
                 left_sign = '>=' if parts1[bli].all_mins_follow else '>'
-                bridge.add(Condition(parts1[bli].level, left_sign, parts1[bli].value, parts1[bli].max_value))
-                bridge.add(Condition(parts2[bli].level, '<', parts2[bli].value, parts2[bli].max_value))
+                bridge.add(Condition(parts1[bli].level, left_sign,
+                                     parts1[bli].value, parts1[bli].max_value))
+                bridge.add(Condition(parts2[bli].level, '<',
+                                     parts2[bli].value, parts2[bli].max_value))
                 ors.append(bridge)
-            elif (parts2[bli].value - parts1[bli].value) == 1 and p1.all_mins_follow:
+            elif (parts2[bli].value - parts1[bli].value) == 1 and parts1[bli].all_mins_follow:
                 bridge = ConditionsGroup(Position.middle)
-                bridge.add(Condition(parts1[bli].level, '=', parts1[bli].value, parts1[bli].max_value))
+                bridge.add(Condition(parts1[bli].level, '=',
+                                     parts1[bli].value, parts1[bli].max_value))
                 ors.append(bridge)
-            
+
         # Reset the date parts because we no longer have to deal with the
         # parts that went into the ands list
         parts1 = parts1[bli:]
@@ -277,92 +288,95 @@ class Spec(object):
         # MMDDCC, which should be MM=a AND DD=b and CC>c
         # MMDD, which should be MM=1 AND DD>b
         for i in range(len(parts1), 1, -1):
-            g = ConditionsGroup(Position.left)
-            for j, p1 in enumerate(reversed(parts1[:i])):
+            grp = ConditionsGroup(Position.left)
+            for j, part1 in enumerate(reversed(parts1[:i])):
                 sign = '>' if j == 0 else '='
-                if p1.all_mins_follow:
-                    if p1.at_min():
+                if part1.all_mins_follow:
+                    if part1.at_min():
                         # continue  # we don't want >=0
                         break
                     sign = '>='
-                if sign == '>' and p1.at_max():  # vaccuous
-                    g.conditions = []  # wipe out this entire group
+                if sign == '>' and part1.at_max():  # vaccuous
+                    grp.conditions = []  # wipe out this entire group
                     break
-                g.add(Condition(p1.level, sign, p1.value, p1.max_value))
-            if g.conditions:
-                ors.append(g)
+                grp.add(Condition(part1.level, sign, part1.value, part1.max_value))
+            if grp.conditions:
+                ors.append(grp)
 
         # Finally the ors that come after the bridge
         for i in range(2, len(parts2) + 1, 1):
-            g = ConditionsGroup(Position.right)
-            for j, p2 in enumerate(reversed(parts2[:i])):
+            grp = ConditionsGroup(Position.right)
+            for j, part2 in enumerate(reversed(parts2[:i])):
                 sign = '<' if j == 0 else '='
-                if p2.all_mins_follow or sign == '<':
-                    if p2.at_min():
+                if part2.all_mins_follow or sign == '<':
+                    if part2.at_min():
                         # continue  # we don't want <=0
                         break
-                g.add(Condition(p2.level, sign, p2.value, p2.max_value))
-            if g.conditions:
-                ors.append(g)
-    
+                grp.add(Condition(part2.level, sign, part2.value, part2.max_value))
+            if grp.conditions:
+                ors.append(grp)
+
         return Range(ands, ors)
-        
+
     def get_partition_range(self):
         return self.partition_range
 
-    def formats_for_datetime(self, prefix, dt):
+    @staticmethod
+    def formats_for_datetime(prefix, dtime):
         formats = []
-        formats.append((prefix + '_unixtime', dt.strftime('%s')))
-        formats.append((prefix + '_unixtime_ms', dt.strftime('%s000')))
-        formats.append((prefix + '_yyyymmdd', dt.format('%Y%m%d')))
-        formats.append((prefix + '_yyyy', dt.format('%Y')))
-        formats.append((prefix + '_mm', dt.format('%m')))
-        formats.append((prefix + '_dd', dt.format('%d')))
-        formats.append((prefix + '_hh', dt.format('%H')))
-        formats.append((prefix + '_min', dt.format('%M')))
-        formats.append((prefix + '_sec', dt.format('%S')))
+        formats.append((prefix + '_unixtime', dtime.strftime('%s')))
+        formats.append((prefix + '_unixtime_ms', dtime.strftime('%s000')))
+        formats.append((prefix + '_yyyymmdd', dtime.format('%Y%m%d')))
+        formats.append((prefix + '_yyyy', dtime.format('%Y')))
+        formats.append((prefix + '_mm', dtime.format('%m')))
+        formats.append((prefix + '_dd', dtime.format('%d')))
+        formats.append((prefix + '_hh', dtime.format('%H')))
+        formats.append((prefix + '_min', dtime.format('%M')))
+        formats.append((prefix + '_sec', dtime.format('%S')))
         return formats
 
-    def comment_out(self, text):
+    @staticmethod
+    def comment_out(text):
         out = ''
         for line in text.split('\n'):
             out += '-- ' + line + '\n'
         return out
-    
+
     def substitute(self,
                    query,
                    verbose=False,
                    pretty=False):
-        TIMESTAMP_PATTERN = '%Y-%m-%d %H:%M:%S'
-        HPDR_PREFIX = 'HPDR_'
+        timestamp_pattern = '%Y-%m-%d %H:%M:%S'
+        hpdr_prefix = 'HPDR_'
         hpdr = self.partition_range.build_display(pretty=False)
         hpdr_pretty = self.partition_range.build_display(pretty=True)
         formats_list = []
-        formats_list.append((HPDR_PREFIX + 'izone', self.izone))
-        formats_list.append((HPDR_PREFIX + 'qzone', self.qzone))
-        formats_list.append((HPDR_PREFIX + 'begin_ts', self.begin.format(TIMESTAMP_PATTERN)))
-        formats_list.append((HPDR_PREFIX + 'end_ts', self.end.format(TIMESTAMP_PATTERN)))
-        formats_list.append((HPDR_PREFIX + 'slop_end_ts', self.slop_end.format(TIMESTAMP_PATTERN)))
-        formats_list += self.formats_for_datetime(HPDR_PREFIX + 'begin', self.begin)
-        formats_list += self.formats_for_datetime(HPDR_PREFIX + 'end', self.end)
-        formats_list += self.formats_for_datetime(HPDR_PREFIX + 'slop_end', self.slop_end)
+        formats_list.append((hpdr_prefix + 'izone', self.izone))
+        formats_list.append((hpdr_prefix + 'qzone', self.qzone))
+        formats_list.append((hpdr_prefix + 'begin_ts', self.begin.format(timestamp_pattern)))
+        formats_list.append((hpdr_prefix + 'end_ts', self.end.format(timestamp_pattern)))
+        formats_list.append((hpdr_prefix + 'slop_end_ts', self.slop_end.format(timestamp_pattern)))
+        formats_list += Spec.formats_for_datetime(hpdr_prefix + 'begin', self.begin)
+        formats_list += Spec.formats_for_datetime(hpdr_prefix + 'end', self.end)
+        formats_list += Spec.formats_for_datetime(hpdr_prefix + 'slop_end', self.slop_end)
         formats = OrderedDict(formats_list)
 
         # Build this table first, when it doesn't have $hpdr in it yet, cause it doesn't print well
         # with $hpdr in it
         table_with_comments = ''
         if verbose:
-            table  = tabulate.tabulate([(x,y) for x,y in formats.items()], headers=['variable', 'value'])
+            table = tabulate.tabulate([(x, y) for x, y in formats.items()],
+                                      headers=['variable', 'value'])
             for row in table.split('\n'):
                 table_with_comments += '-- ' + row + '\n'
-        formats[HPDR_PREFIX + 'range'] = hpdr
-        formats[HPDR_PREFIX + 'range_pretty'] = hpdr_pretty
+        formats[hpdr_prefix + 'range'] = hpdr
+        formats[hpdr_prefix + 'range_pretty'] = hpdr_pretty
         if query:
-            template = query
+            template_input = query
         else:
-            template = hpdr_pretty if pretty else hpdr
-        s = Template(template)
-        filled = s.substitute(formats)
+            template_input = hpdr_pretty if pretty else hpdr
+        template = Template(template_input)
+        filled = template.substitute(formats)
         out = filled
         if verbose:
             out += '\n'
@@ -375,17 +389,16 @@ class Spec(object):
                 out += '--\n'
                 out += '-- Input:\n'
                 out += '---------\n'
-                out += self.comment_out(template)
+                out += Spec.comment_out(template)
                 out += '----------\n'
                 out += '-- Output:\n'
                 out += '----------\n'
-                out += self.comment_out(filled)
+                out += Spec.comment_out(filled)
                 out += '----------\n'
             out += '--\n'
-            out += '-- This is a complete list of the available template variables and their values:\n'
+            out += ('-- This is a complete list of the available '
+                    'template variables and their values:\n')
             out += '--\n'
             out += table_with_comments
 
         return out
-    
-        

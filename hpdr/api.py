@@ -1,10 +1,15 @@
+# pylint: disable=too-many-arguments
+"""Doco
+"""
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 from future import standard_library
-standard_library.install_aliases()
 from .models import Spec
+standard_library.install_aliases()
+
+
 
 def build(begin,
           end,
@@ -23,28 +28,33 @@ def build(begin,
     :param izone: (optional) time zone for input dates, defaults to UTC
     :param qzone: (optional) time zone to use in query, defaults to UTC
     :param slop: (optional) duration to add to end date for partition specification,
-                            specified as \d+[years|months|days|hours|minutes],
+                            specified as \\d+[years|months|days|hours|minutes],
                             for example, 5hours
     :param years: (optional) name for years partition, defaults to YYYY
-    :param day: (optional) name for days partition, defaults to DD
+    :param months: (optional) name for months partition, defaults to MM
+    :param days: (optional) name for days partition, defaults to DD
     :param hours: (optional) name for hours partition, defaults to HH
     :param minutes: (optional) name for hours partition, defaults to MIN
     :return: :class:`Spec` object representing the date range
     :rtype: :class:`Spec`
     """
 
-    kw = {}
-    if izone: kw['izone'] = izone
-    if qzone: kw['qzone'] = qzone
-    if slop: kw['slop'] = slop
-    if years: kw['years'] = years
-    if months: kw['months'] = months
-    if days: kw['days'] = days
-    if hours: kw['hours'] = hours
-    if minutes: kw['minutes'] = minutes
+    keywords = {}
+    if izone:
+        keywords['izone'] = izone
+    if qzone:
+        keywords['qzone'] = qzone
+    if slop:
+        keywords['slop'] = slop
+    if years:
+        keywords['years'] = years
+    if months:
+        keywords['months'] = months
+    if days:
+        keywords['days'] = days
+    if hours:
+        keywords['hours'] = hours
+    if minutes:
+        keywords['minutes'] = minutes
 
-    return Spec(begin,
-                end,
-                **kw)
-
-          
+    return Spec(begin, end, **keywords)
