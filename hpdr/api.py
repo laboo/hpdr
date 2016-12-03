@@ -9,13 +9,13 @@ from future import standard_library
 from .models import Spec
 standard_library.install_aliases()
 
-
-
 def build(begin,
           end,
           izone='UTC',
           qzone='UTC',
           slop=None,
+          lslop=None,
+          rslop=None,
           years='YYYY',
           months='MM',
           days='DD',
@@ -27,7 +27,13 @@ def build(begin,
     :param end: end date of range, a datetime or yyyymmddmmss string
     :param izone: (optional) time zone for input dates, defaults to UTC
     :param qzone: (optional) time zone to use in query, defaults to UTC
-    :param slop: (optional) duration to add to end date for partition specification,
+    :param slop: (optional) duration to add to both ends of the partition range,
+                            specified as \\d+[years|months|days|hours|minutes],
+                            for example, 5hours
+    :param lslop: (optional) duration to add to the front end of the partition range,
+                            specified as \\d+[years|months|days|hours|minutes],
+                            for example, 5hours
+    :param rslop: (optional) duration to add to the back end of the partition range,
                             specified as \\d+[years|months|days|hours|minutes],
                             for example, 5hours
     :param years: (optional) name for years partition, defaults to YYYY
@@ -46,6 +52,10 @@ def build(begin,
         keywords['qzone'] = qzone
     if slop:
         keywords['slop'] = slop
+    if lslop:
+        keywords['lslop'] = lslop
+    if rslop:
+        keywords['rslop'] = rslop
     if years:
         keywords['years'] = years
     if months:

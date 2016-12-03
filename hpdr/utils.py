@@ -9,11 +9,11 @@ from datetime import timedelta
 import re
 from builtins import int
 from builtins import str
+import attr
 import pendulum
 from future import standard_library
 from . import enums
 from .enums import Level, Position
-from .models import DatePart
 standard_library.install_aliases()
 
 ZERO_BASED = {Level.HH, Level.MIN}
@@ -185,3 +185,17 @@ def deltastr_to_td(deltastr):
     keywords = {}
     keywords[matched.group(2)] = int(matched.group(1))
     return timedelta(**keywords)
+
+@attr.s
+class DatePart(object):
+    level = attr.ib(validator=attr.validators.instance_of(Level))
+    value = attr.ib(validator=attr.validators.instance_of(int))
+    min_value = attr.ib(validator=attr.validators.instance_of(int))
+    max_value = attr.ib(validator=attr.validators.instance_of(int))
+    all_mins_follow = attr.ib(validator=attr.validators.instance_of(bool))
+    def __str__(self):
+        return 'level={} {} all_mins_follow={}'.format(self.level, self.value, self.all_mins_follow)
+    def at_min(self):
+        return self.value == self.min_value
+    def at_max(self):
+        return self.value == self.max_value

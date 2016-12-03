@@ -20,6 +20,7 @@ import pendulum
 from future import standard_library
 from six import string_types
 from .enums import Level, Position
+from . import utils
 standard_library.install_aliases()
 
 @attr.s(cmp=False)
@@ -176,21 +177,6 @@ class Range(object):
                 out = ands_str + ors_str
         return out
 
-@attr.s
-class DatePart(object):
-    level = attr.ib(validator=attr.validators.instance_of(Level))
-    value = attr.ib(validator=attr.validators.instance_of(int))
-    min_value = attr.ib(validator=attr.validators.instance_of(int))
-    max_value = attr.ib(validator=attr.validators.instance_of(int))
-    all_mins_follow = attr.ib(validator=attr.validators.instance_of(bool))
-    def __str__(self):
-        return 'level={} {} all_mins_follow={}'.format(self.level, self.value, self.all_mins_follow)
-    def at_min(self):
-        return self.value == self.min_value
-    def at_max(self):
-        return self.value == self.max_value
-
-
 class Spec(object):
     def __init__(self,
                  begin,
@@ -198,19 +184,18 @@ class Spec(object):
                  izone='UTC',
                  qzone='UTC',
                  slop=None,
+                 lslop=None,
+                 rslop=None,
                  years='YYYY',
                  months='MM',
                  days='DD',
                  hours='HH',
                  minutes='MIN'):
-        from . import utils
         self.izone = izone
         self.qzone = qzone
         self.begin = Spec._shift_dt(begin, izone, qzone)
         self.end = Spec._shift_dt(end, izone, qzone)
-        not_a_delta_str = (not slop or (isinstance(slop, timedelta)))
-        self.slop = slop if not_a_delta_str else utils.deltastr_to_td(slop)
-        self.slop_end = (self.end + self.slop) if self.slop else self.end
+        self._build_slop(slop, lslop, rslop)
         self.partition_range = Spec._build_range(self.begin, self.slop_end)
         Condition.set_display(Level.YYYY, years)
         Condition.set_display(Level.MM, months)
@@ -219,8 +204,21 @@ class Spec(object):
         Condition.set_display(Level.MIN, minutes)
 
     @staticmethod
+    def _not_a_delta_str(slop):
+        return not slop or (isinstance(slop, timedelta))
+
+    @staticmethod
+    def _calc_slop(slop):
+        return slop if Spec._not_a_delta_str(slop) else utils.deltastr_to_td(slop)
+
+    def _build_slop(self, slop, lslop, rslop):
+        add_to_begin = Spec._calc_slop(lslop) if lslop else Spec._calc_slop(slop)
+        add_to_end = Spec._calc_slop(rslop) if rslop else Spec._calc_slop(slop)
+        self.slop_begin = (self.begin - add_to_begin) if add_to_begin else self.begin
+        self.slop_end = (self.end + add_to_end) if add_to_end else self.end
+
+    @staticmethod
     def _shift_dt(dtime, i_zone_str, q_zone_str):
-        from . import utils
         if isinstance(dtime, pendulum.pendulum.Pendulum):
             pass  # pendulum types are good
         elif isinstance(dtime, datetime):
@@ -242,7 +240,6 @@ class Spec(object):
 
     @staticmethod
     def _build_range(begin, end):
-        from . import utils
         ands = []
         ors = []
         parts1 = utils.datetime_to_dateparts(begin)
@@ -355,9 +352,12 @@ class Spec(object):
         formats_list.append((hpdr_prefix + 'qzone', self.qzone))
         formats_list.append((hpdr_prefix + 'begin_ts', self.begin.format(timestamp_pattern)))
         formats_list.append((hpdr_prefix + 'end_ts', self.end.format(timestamp_pattern)))
-        formats_list.append((hpdr_prefix + 'slop_end_ts', self.slop_end.format(timestamp_pattern)))
+        formats_list.append((hpdr_prefix + 'slop_begin_ts',
+                             self.slop_begin.format(timestamp_pattern)))
+        formats_list.append((hpdr_prefix + 'slop_end_ts', self.slop_end.format(timestamp_pattern)))        
         formats_list += Spec.formats_for_datetime(hpdr_prefix + 'begin', self.begin)
         formats_list += Spec.formats_for_datetime(hpdr_prefix + 'end', self.end)
+        formats_list += Spec.formats_for_datetime(hpdr_prefix + 'slop_begin', self.slop_begin)
         formats_list += Spec.formats_for_datetime(hpdr_prefix + 'slop_end', self.slop_end)
         formats = OrderedDict(formats_list)
 
@@ -382,6 +382,7 @@ class Spec(object):
             out += '\n'
             out += '-----------------------------------------------------------------------\n'
             out += '-- Parts of this query were auto-generated with hpdr (pip install hpdr)\n'
+
             out += '--\n'
             out += '--  ' + sys.executable + ' ' + ' '.join(sys.argv) + '\n'
             out += '--\n'
@@ -389,7 +390,7 @@ class Spec(object):
                 out += '--\n'
                 out += '-- Input:\n'
                 out += '---------\n'
-                out += Spec.comment_out(template)
+                out += Spec.comment_out(template_input)
                 out += '----------\n'
                 out += '-- Output:\n'
                 out += '----------\n'
@@ -400,5 +401,6 @@ class Spec(object):
                     'template variables and their values:\n')
             out += '--\n'
             out += table_with_comments
-
+            out += '--\n'            
+            out += '-- Note that all values have been shifted to the query time zone (HPDR_qzone)\n'            
         return out

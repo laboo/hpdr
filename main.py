@@ -13,6 +13,8 @@ def main(args):
     if args.tz: keywords['izone'] = args.tz
     if args.qtz: keywords['qzone'] = args.qtz
     if args.slop: keywords['slop'] = args.slop
+    if args.slop: keywords['lslop'] = args.lslop
+    if args.slop: keywords['rslop'] = args.rslop
     if args.years: keywords['years'] = args.years
     if args.months: keywords['months'] = args.months
     if args.days: keywords['days'] = args.days
@@ -36,7 +38,13 @@ if __name__ == '__main__':
     PARSER.add_argument('-e', '--end', required=True,
                         help='end time, exclusive, in YYYY[[MM][[DD][HH][NN]]] format.')
     PARSER.add_argument('-s', '--slop', required=False,
-                        help=('extra duration to add to end time in '
+                        help=('extra duration to add to both ends of range in '
+                              '\\d+(years|months|days|hours|minutes) format.'))
+    PARSER.add_argument('-l', '--lslop', required=False,
+                        help=('extra duration to add to beginning of range in '
+                              '\\d+(years|months|days|hours|minutes) format.'))
+    PARSER.add_argument('-r', '--rslop', required=False,
+                        help=('extra duration to add to end of range in '
                               '\\d+(years|months|days|hours|minutes) format.'))
     PARSER.add_argument('-z', '--tz', required=False,
                         help=('input time zone for begin and end times in tzdata format, '

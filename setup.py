@@ -3,8 +3,8 @@ from setuptools import find_packages, setup
 setup(
     name='hpdr',
     packages=find_packages(),
-    version='0.2',
-    description='Hive dates for humans.',
+    version='0.4',
+    description='Hive date ranges simplified.',
     author='Mark Libucha',
     author_email='mlibucha@gmail.com',
     url='http://hpdrdoc.blogspot.com/',
