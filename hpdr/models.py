@@ -196,7 +196,7 @@ class Spec(object):
         self.begin = Spec._shift_dt(begin, izone, qzone)
         self.end = Spec._shift_dt(end, izone, qzone)
         self._build_slop(slop, lslop, rslop)
-        self.partition_range = Spec._build_range(self.begin, self.slop_end)
+        self.partition_range = Spec._build_range(self.slop_begin, self.slop_end)
         Condition.set_display(Level.YYYY, years)
         Condition.set_display(Level.MM, months)
         Condition.set_display(Level.DD, days)
