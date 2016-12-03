@@ -13,8 +13,8 @@ def main(args):
     if args.tz: keywords['izone'] = args.tz
     if args.qtz: keywords['qzone'] = args.qtz
     if args.slop: keywords['slop'] = args.slop
-    if args.slop: keywords['lslop'] = args.lslop
-    if args.slop: keywords['rslop'] = args.rslop
+    if args.lslop: keywords['lslop'] = args.lslop
+    if args.rslop: keywords['rslop'] = args.rslop
     if args.years: keywords['years'] = args.years
     if args.months: keywords['months'] = args.months
     if args.days: keywords['days'] = args.days
