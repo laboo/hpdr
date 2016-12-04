@@ -1,5 +1,5 @@
 # pylint: disable=redefined-builtin, too-few-public-methods, no-member,too-many-branches
-# pylint: disable=too-many-arguments, too-many-locals
+# pylint: disable=too-many-arguments, too-many-locals, too-many-instance-attributes
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
@@ -333,7 +333,7 @@ class Spec(object):
         vars_list.append((hpdr_prefix + 'begin_ts', self.begin.format(timestamp_pattern)))
         vars_list.append((hpdr_prefix + 'end_ts', self.end.format(timestamp_pattern)))
         vars_list.append((hpdr_prefix + 'slop_begin_ts',
-                             self.slop_begin.format(timestamp_pattern)))
+                          self.slop_begin.format(timestamp_pattern)))
         vars_list.append((hpdr_prefix + 'slop_end_ts', self.slop_end.format(timestamp_pattern)))
         vars_list += Spec.vars_for_datetime(hpdr_prefix + 'begin', self.begin)
         vars_list += Spec.vars_for_datetime(hpdr_prefix + 'end', self.end)
@@ -343,7 +343,7 @@ class Spec(object):
         vars[hpdr_prefix + 'range'] = hpdr
         vars[hpdr_prefix + 'range_pretty'] = hpdr_pretty
         return vars
-        
+
     @staticmethod
     def vars_for_datetime(prefix, dtime):
         vars = []
@@ -369,8 +369,6 @@ class Spec(object):
                    query,
                    verbose=False,
                    pretty=False):
-        timestamp_pattern = '%Y-%m-%d %H:%M:%S'
-        hpdr_prefix = 'HPDR_'
         hpdr = self.partition_range.build_display(pretty=False)
         hpdr_pretty = self.partition_range.build_display(pretty=True)
 
@@ -414,6 +412,6 @@ class Spec(object):
                     'template variables and their values:\n')
             out += '--\n'
             out += table_with_comments
-            out += '--\n'            
-            out += '-- Note that all values have been shifted to the query time zone (HPDR_qzone)\n'            
+            out += '--\n'
+            out += '-- Note that all values have been shifted to the query time zone (HPDR_qzone)\n'
         return out
