@@ -197,6 +197,7 @@ class Spec(object):
         self.end = Spec._shift_dt(end, izone, qzone)
         self._build_slop(slop, lslop, rslop)
         self.partition_range = Spec._build_range(self.slop_begin, self.slop_end)
+        self.variables_map = self._build_variables_map()
         Condition.set_display(Level.YYYY, years)
         Condition.set_display(Level.MM, months)
         Condition.set_display(Level.DD, days)
@@ -318,19 +319,44 @@ class Spec(object):
     def get_partition_range(self):
         return self.partition_range
 
+    def get_variables_map(self):
+        return self.variables_map
+
+    def _build_variables_map(self):
+        timestamp_pattern = '%Y-%m-%d %H:%M:%S'
+        hpdr_prefix = 'HPDR_'
+        hpdr = self.partition_range.build_display(pretty=False)
+        hpdr_pretty = self.partition_range.build_display(pretty=True)
+        vars_list = []
+        vars_list.append((hpdr_prefix + 'izone', self.izone))
+        vars_list.append((hpdr_prefix + 'qzone', self.qzone))
+        vars_list.append((hpdr_prefix + 'begin_ts', self.begin.format(timestamp_pattern)))
+        vars_list.append((hpdr_prefix + 'end_ts', self.end.format(timestamp_pattern)))
+        vars_list.append((hpdr_prefix + 'slop_begin_ts',
+                             self.slop_begin.format(timestamp_pattern)))
+        vars_list.append((hpdr_prefix + 'slop_end_ts', self.slop_end.format(timestamp_pattern)))
+        vars_list += Spec.vars_for_datetime(hpdr_prefix + 'begin', self.begin)
+        vars_list += Spec.vars_for_datetime(hpdr_prefix + 'end', self.end)
+        vars_list += Spec.vars_for_datetime(hpdr_prefix + 'slop_begin', self.slop_begin)
+        vars_list += Spec.vars_for_datetime(hpdr_prefix + 'slop_end', self.slop_end)
+        vars = OrderedDict(vars_list)
+        vars[hpdr_prefix + 'range'] = hpdr
+        vars[hpdr_prefix + 'range_pretty'] = hpdr_pretty
+        return vars
+        
     @staticmethod
-    def formats_for_datetime(prefix, dtime):
-        formats = []
-        formats.append((prefix + '_unixtime', dtime.strftime('%s')))
-        formats.append((prefix + '_unixtime_ms', dtime.strftime('%s000')))
-        formats.append((prefix + '_yyyymmdd', dtime.format('%Y%m%d')))
-        formats.append((prefix + '_yyyy', dtime.format('%Y')))
-        formats.append((prefix + '_mm', dtime.format('%m')))
-        formats.append((prefix + '_dd', dtime.format('%d')))
-        formats.append((prefix + '_hh', dtime.format('%H')))
-        formats.append((prefix + '_min', dtime.format('%M')))
-        formats.append((prefix + '_sec', dtime.format('%S')))
-        return formats
+    def vars_for_datetime(prefix, dtime):
+        vars = []
+        vars.append((prefix + '_unixtime', dtime.strftime('%s')))
+        vars.append((prefix + '_unixtime_ms', dtime.strftime('%s000')))
+        vars.append((prefix + '_yyyymmdd', dtime.format('%Y%m%d')))
+        vars.append((prefix + '_yyyy', dtime.format('%Y')))
+        vars.append((prefix + '_mm', dtime.format('%m')))
+        vars.append((prefix + '_dd', dtime.format('%d')))
+        vars.append((prefix + '_hh', dtime.format('%H')))
+        vars.append((prefix + '_min', dtime.format('%M')))
+        vars.append((prefix + '_sec', dtime.format('%S')))
+        return vars
 
     @staticmethod
     def comment_out(text):
@@ -347,36 +373,23 @@ class Spec(object):
         hpdr_prefix = 'HPDR_'
         hpdr = self.partition_range.build_display(pretty=False)
         hpdr_pretty = self.partition_range.build_display(pretty=True)
-        formats_list = []
-        formats_list.append((hpdr_prefix + 'izone', self.izone))
-        formats_list.append((hpdr_prefix + 'qzone', self.qzone))
-        formats_list.append((hpdr_prefix + 'begin_ts', self.begin.format(timestamp_pattern)))
-        formats_list.append((hpdr_prefix + 'end_ts', self.end.format(timestamp_pattern)))
-        formats_list.append((hpdr_prefix + 'slop_begin_ts',
-                             self.slop_begin.format(timestamp_pattern)))
-        formats_list.append((hpdr_prefix + 'slop_end_ts', self.slop_end.format(timestamp_pattern)))        
-        formats_list += Spec.formats_for_datetime(hpdr_prefix + 'begin', self.begin)
-        formats_list += Spec.formats_for_datetime(hpdr_prefix + 'end', self.end)
-        formats_list += Spec.formats_for_datetime(hpdr_prefix + 'slop_begin', self.slop_begin)
-        formats_list += Spec.formats_for_datetime(hpdr_prefix + 'slop_end', self.slop_end)
-        formats = OrderedDict(formats_list)
 
         # Build this table first, when it doesn't have $hpdr in it yet, cause it doesn't print well
         # with $hpdr in it
         table_with_comments = ''
         if verbose:
-            table = tabulate.tabulate([(x, y) for x, y in formats.items()],
+            table = tabulate.tabulate([(x, y)
+                                       for x, y in self.variables_map.items()
+                                       if 'range' not in x],
                                       headers=['variable', 'value'])
             for row in table.split('\n'):
                 table_with_comments += '-- ' + row + '\n'
-        formats[hpdr_prefix + 'range'] = hpdr
-        formats[hpdr_prefix + 'range_pretty'] = hpdr_pretty
         if query:
             template_input = query
         else:
             template_input = hpdr_pretty if pretty else hpdr
         template = Template(template_input)
-        filled = template.substitute(formats)
+        filled = template.safe_substitute(self.variables_map)
         out = filled
         if verbose:
             out += '\n'
