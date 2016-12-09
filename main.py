@@ -10,6 +10,7 @@ standard_library.install_aliases()
 
 def main(args):
     keywords = {}
+    if args.step: keywords['step'] = args.step
     if args.tz: keywords['izone'] = args.tz
     if args.qtz: keywords['qzone'] = args.qtz
     if args.slop: keywords['slop'] = args.slop
@@ -21,15 +22,16 @@ def main(args):
     if args.hours: keywords['hours'] = args.hours
     if args.minutes: keywords['minutes'] = args.minutes
 
-    spec = api.build(args.begin,
-                     args.end,
-                     **keywords)
+    specs = api.build_with_steps(args.begin,
+                                 args.end,
+                                 **keywords)
 
-    if args.file:
-        query = open(args.file, 'r').read()
-        print(spec.substitute(query, args.verbose, args.pretty))
-    else:
-        print(spec.get_partition_range().build_display(pretty=args.pretty))
+    for spec in specs:
+        if args.file:
+            query = open(args.file, 'r').read()
+            print(spec.substitute(query, args.verbose, args.pretty))
+        else:
+            print(spec.get_partition_range().build_display(pretty=args.pretty))
 
 if __name__ == '__main__':
     PARSER = argparse.ArgumentParser(description='hpdr -- Hive Partition Date Range')
@@ -37,15 +39,18 @@ if __name__ == '__main__':
                         help='beginning time, inclusive, in YYYY[[MM][[DD][HH][NN]]] format.')
     PARSER.add_argument('-e', '--end', required=True,
                         help='end time, exclusive, in YYYY[[MM][[DD][HH][NN]]] format.')
+    PARSER.add_argument('-t', '--step', required=False,
+                        help=('return multiple Spec objects broken down into duration in '
+                              '\\d+(days|hours|minutes) format.'))
     PARSER.add_argument('-s', '--slop', required=False,
                         help=('extra duration to add to both ends of range in '
-                              '\\d+(years|months|days|hours|minutes) format.'))
+                              '\\d+(days|hours|minutes) format.'))
     PARSER.add_argument('-l', '--lslop', required=False,
                         help=('extra duration to add to beginning of range in '
-                              '\\d+(years|months|days|hours|minutes) format.'))
+                              '\\d+(days|hours|minutes) format.'))
     PARSER.add_argument('-r', '--rslop', required=False,
                         help=('extra duration to add to end of range in '
-                              '\\d+(years|months|days|hours|minutes) format.'))
+                              '\\d+(days|hours|minutes) format.'))
     PARSER.add_argument('-z', '--tz', required=False,
                         help=('input time zone for begin and end times in tzdata format, '
                               'e.g. Asia/Katmandu. Defaults to UTC.'))

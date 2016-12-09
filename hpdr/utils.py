@@ -178,7 +178,7 @@ def datestr_to_dt(datestr, tzone):
     return dtime
 
 def deltastr_to_td(deltastr):
-    pattern = r'^(\d+)(years|months|days|hours|minutes)$'
+    pattern = r'^(\d+)(days|hours|minutes)$'
     matched = re.match(pattern, deltastr)
     if not matched:
         raise ValueError('illegal slop value [{0}] Must match {1}'.format(deltastr, pattern))
