@@ -152,10 +152,12 @@ def build_with_steps(begin,
         keywords['slop'] = keywords['lslop'] = keywords['rslop'] = None
         if not isinstance(step, timedelta):
             step = utils.deltastr_to_td(step)
+        specs.append(Spec(main_spec.slop_begin, main_spec.begin, **keywords))
         walk_begin = main_spec.begin
         while walk_begin < main_spec.end:
             walk_end = min(main_spec.end, walk_begin + step)
             specs.append(Spec(walk_begin, walk_end, **keywords))
             walk_begin = walk_end
+        specs.append(Spec(main_spec.end, main_spec.slop_end, **keywords))
 
     return specs
