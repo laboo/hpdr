@@ -19,8 +19,8 @@ import tabulate
 import pendulum
 from future import standard_library
 from six import string_types
-from .enums import Level, Position
-from . import utils
+from hpdr.enums import Level, Position
+from hpdr import utils
 standard_library.install_aliases()
 
 @attr.s(cmp=False)

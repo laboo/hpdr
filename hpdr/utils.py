@@ -12,8 +12,8 @@ from builtins import str
 import attr
 import pendulum
 from future import standard_library
-from . import enums
-from .enums import Level, Position
+from hpdr import enums
+from hpdr.enums import Level, Position
 standard_library.install_aliases()
 
 ZERO_BASED = {Level.HH, Level.MIN}

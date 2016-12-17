@@ -6,8 +6,8 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 from future import standard_library
-from .models import Spec
-from . import utils
+from hpdr.models import Spec
+from hpdr import utils
 from datetime import timedelta
 standard_library.install_aliases()
 
