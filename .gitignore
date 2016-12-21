@@ -5,3 +5,4 @@ __pycache__
 .eggs
 dist/
 hpdr.egg-info/
+.idea/

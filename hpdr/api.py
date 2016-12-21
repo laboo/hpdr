@@ -49,40 +49,18 @@ def build(begin,
        A Spec object representing the date range
     """
 
-    keywords = {}
-    if izone:
-        keywords['izone'] = izone
-    if qzone:
-        keywords['qzone'] = qzone
-    if slop:
-        keywords['slop'] = slop
-    if lslop:
-        keywords['lslop'] = lslop
-    if rslop:
-        keywords['rslop'] = rslop
-    if years:
-        keywords['years'] = years
-    if months:
-        keywords['months'] = months
-    if days:
-        keywords['days'] = days
-    if hours:
-        keywords['hours'] = hours
-    if minutes:
-        keywords['minutes'] = minutes
-
     specs = build_with_steps(begin,
                              end,
-                             keywords['izone'] if izone in keywords else None,
-                             keywords['qzone'] if qzone in keywords else None,
-                             keywords['slop'] if slop in keywords else None,
-                             keywords['lslop'] if lslop in keywords else None,
-                             keywords['rslop'] if rslop in keywords else None,
-                             keywords['years'] if years in keywords else None,
-                             keywords['months'] if months in keywords else None,
-                             keywords['days'] if days in keywords else None,
-                             keywords['hours'] if hours in keywords else None,
-                             keywords['minutes'] if minutes in keywords else None)
+                             izone=izone,
+                             qzone=qzone,
+                             slop=slop,
+                             lslop=lslop,
+                             rslop=rslop,
+                             years=years,
+                             months=months,
+                             days=days,
+                             hours=hours,
+                             minutes=minutes)
 
     return specs[0]
 
