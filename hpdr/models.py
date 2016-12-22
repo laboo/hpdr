@@ -116,10 +116,46 @@ class ConditionsGroup(object):
 
 @attr.s
 class Range(object):
+    '''A date range, abstractly represented by SQL conditions.
+
+    Here's the representation of a protypical date range as SQL:
+
+    (YYYY=2017 AND MM=02 AND ((DD=15 AND HH>=12) OR (DD>15 AND DD<25) OR (DD=25 AND HH<12)))
+
+    for 10 days time, 2017021512 thru 2017022512. Structurally, the
+    range breaks down into three parts
+
+    (YYYY=2017 AND MM=02 AND [The "ands" part, the overlap between the dates on the high end.]
+    ((DD=15 AND HH>=12) OR   [The "left ors" part.]
+     (DD>15 AND DD<25) OR    [The "middle ors" part, referred to as "the bridge". Optional.]
+     (DD=25 AND HH<12))      [The "right ors" part.]
+    )
+
+    Stare at a few more of these and the pattern comes clear.
+
+    '''
     ands = attr.ib(validator=attr.validators.instance_of(list))  # list of Condition
     ors = attr.ib(validator=attr.validators.instance_of(list))   # list of ConditionsGroup
 
     def build_display(self, pretty=False):
+        '''Build a string for displaying the Range.
+
+        Create a string version of the Range in valid SQL syntax for a conditional clause.
+        For example, for 2017021512 thru 2017022512,
+
+        pretty=False:
+        (YYYY=2017 AND MM=02 AND ((DD=15 AND HH>=12) OR (DD>15 AND DD<25) OR (DD=25 AND HH<12)))
+
+        pretty=True:
+        (
+        YYYY=2017 AND MM=02 AND
+         (
+             (DD=15 AND HH>=12)
+          OR (DD>15 AND DD<25)
+          OR (DD=25 AND HH<12)
+         )
+        )
+        '''
         ands_str = ''
         ors_str = ''
         out = ''

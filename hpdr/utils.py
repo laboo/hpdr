@@ -18,44 +18,55 @@ standard_library.install_aliases()
 
 ZERO_BASED = {Level.HH, Level.MIN}
 
-def adjust(level, value):
+def _adjust(level, value):
+    '''Decrements a value by 1 iff it's not a zero-base value like HOUR (0-23)'''
     adjusted = value if level in ZERO_BASED else value - 1
     return adjusted
 
-def add_condition_to_datetimes(cnd, pos, early, late):
+def _add_condition_to_datetimes(cnd, pos, early, late):
+    '''Add the duration of time in a condition and adds to it to early and late.
+
+    For example, 'MM=02' is equal to one month of time (just February). But if the
+    sign is not '=', then the duration depends of the Position of the condition.
+    For example, 'MM>=02', if on the left, as in
+    'MM>=02' is equal to 11 months (February through December)
+    '''
     level = level_to_datetime_unit(cnd.level)
     if cnd.sign == '=':
-        early = add_to_datetime(early, level, adjust(cnd.level, cnd.value))
-        late = add_to_datetime(late, level, adjust(cnd.level, cnd.value))
+        early = add_to_datetime(early, level, _adjust(cnd.level, cnd.value))
+        late = add_to_datetime(late, level, _adjust(cnd.level, cnd.value))
+
     elif pos == Position.left:
         if cnd.sign == '>':
-            early = add_to_datetime(early, level, adjust(cnd.level, cnd.value) + 1)
+            early = add_to_datetime(early, level, _adjust(cnd.level, cnd.value) + 1)
         elif cnd.sign == '>=':
-            early = add_to_datetime(early, level, adjust(cnd.level, cnd.value))
-        late = add_to_datetime(late, level, adjust(cnd.level, get_max(cnd.level, late) + 1))
+            early = add_to_datetime(early, level, _adjust(cnd.level, cnd.value))
+        late = add_to_datetime(late, level, _adjust(cnd.level, get_max(cnd.level, late) + 1))
     elif pos == Position.right:
-        early = add_to_datetime(early, level, adjust(cnd.level, get_min(cnd.level)))
+        early = add_to_datetime(early, level, _adjust(cnd.level, get_min(cnd.level)))
         if cnd.sign == '<':
-            late = add_to_datetime(late, level, adjust(cnd.level, cnd.value))
+            late = add_to_datetime(late, level, _adjust(cnd.level, cnd.value))
         elif cnd.sign == '<=':
-            late = add_to_datetime(late, level, adjust(cnd.level, cnd.value) + 1)
+            late = add_to_datetime(late, level, _adjust(cnd.level, cnd.value) + 1)
     elif pos == Position.middle:
         if cnd.sign == '<':
-            late = add_to_datetime(late, level, adjust(cnd.level, cnd.value))
+            late = add_to_datetime(late, level, _adjust(cnd.level, cnd.value))
         elif cnd.sign == '>':
-            early = add_to_datetime(early, level, adjust(cnd.level, cnd.value) + 1)
+            early = add_to_datetime(early, level, _adjust(cnd.level, cnd.value) + 1)
         elif cnd.sign == '>=':
-            early = add_to_datetime(early, level, adjust(cnd.level, cnd.value))
+            early = add_to_datetime(early, level, _adjust(cnd.level, cnd.value))
     return (early, late)
 
 def duration(rng):
+    '''Calculate the number of seconds contained in a by a date Range.'''
+
     seconds = 0
     early = pendulum.create(1, 1, 1, 0, 0, 0)
     late = pendulum.create(1, 1, 1, 0, 0, 0)
     smallest_and_level = None
     for an_and in sorted(rng.ands):
         smallest_and_level = an_and.level
-        (early, late) = add_condition_to_datetimes(an_and, None, early, late)
+        (early, late) = _add_condition_to_datetimes(an_and, None, early, late)
     if len(rng.ors) == 0:
         late = add_to_datetime(late,
                                level_to_datetime_unit(smallest_and_level),
@@ -66,7 +77,7 @@ def duration(rng):
             erly = early.copy()
             lte = late.copy()
             for cnd in sorted(grp):
-                (erly, lte) = add_condition_to_datetimes(cnd, grp.position, erly, lte)
+                (erly, lte) = _add_condition_to_datetimes(cnd, grp.position, erly, lte)
                 if len(grp) == 1 and cnd.sign == '=':
                     lte = add_to_datetime(lte,
                                           level_to_datetime_unit(cnd.level),
