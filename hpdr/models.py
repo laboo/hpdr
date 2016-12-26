@@ -25,6 +25,13 @@ standard_library.install_aliases()
 
 @attr.s(cmp=False)
 class Condition(object):
+    """A boolean condition, displayed like 'HH>=20'.
+
+    HH is the level.
+    >= is the sign.
+    20 is the value.
+    """
+
     display = {}  # class level attribute
     level = attr.ib(validator=attr.validators.instance_of(Level))
     sign = attr.ib()
@@ -64,6 +71,10 @@ class Condition(object):
 
 @attr.s(cmp=False)
 class ConditionsGroup(object):
+    """A group of Condition objects, logically connected by ANDs.
+
+    Displayed like (YYYY=2016 AND MM=11 AND DD>=12).
+    """
     position = attr.ib(validator=attr.validators.instance_of(Position))
     conditions = attr.ib(init=False, default=attr.Factory(list))
 
@@ -76,8 +87,6 @@ class ConditionsGroup(object):
             return str(self.position) + ' ' + ' '.join([str(x) for x in sorted(self.conditions)])
         else:
             return ''
-    #def __str__(self):
-    #    return self.__repr__()
     def __iter__(self):
         return self.conditions.__iter__()
     def __getitem__(self, key):
@@ -214,6 +223,7 @@ class Range(object):
         return out
 
 class Spec(object):
+    """Object for representing a partition date range."""
     def __init__(self,
                  begin,
                  end,
@@ -277,6 +287,8 @@ class Spec(object):
 
     @staticmethod
     def _build_range(begin, end):
+        """Builds a Range object representing time from begin to end."""
+
         ands = []
         ors = []
         parts1 = utils.datetime_to_dateparts(begin)
@@ -359,6 +371,14 @@ class Spec(object):
         return self.variables_map
 
     def _build_variables_map(self):
+        """Creates a map of HPDR_ variables to their values for use in
+        templated hive queries.
+
+        For example, for the date range 200312 to 200412:
+          HPDR_begin_ts => '2003-12-01 00:00:00'
+          HPDR_slop_begin_unixtime => '1070265600'
+          HPDR_range => ((YYYY=2003 AND MM>=12) OR (YYYY>2003 AND YYYY<2014) OR (YYYY=2014 AND MM<12))
+        """
         timestamp_pattern = '%Y-%m-%d %H:%M:%S'
         hpdr_prefix = 'HPDR_'
         hpdr = self.partition_range.build_display(pretty=False)
@@ -405,6 +425,16 @@ class Spec(object):
                    query,
                    verbose=False,
                    pretty=False):
+        '''Fills in the HPDR_ varibles with the values.
+        Args:
+            query: a string (optionally) containing HPDR_ variables
+            verbose: print out lots of extra info as an SQL comment
+            pretty: if True returns just HPDR_range_pretty variable
+
+        Returns:
+           query with HDPR_ variables substituted for, or HPDR_range_pretty
+           value if pretty=True
+        '''
         hpdr = self.partition_range.build_display(pretty=False)
         hpdr_pretty = self.partition_range.build_display(pretty=True)
 

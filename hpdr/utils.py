@@ -19,18 +19,18 @@ standard_library.install_aliases()
 ZERO_BASED = {Level.HH, Level.MIN}
 
 def _adjust(level, value):
-    '''Decrements a value by 1 iff it's not a zero-base value like HOUR (0-23)'''
+    """Decrements a value by 1 iff it's not a zero-base value like HOUR (0-23)"""
     adjusted = value if level in ZERO_BASED else value - 1
     return adjusted
 
 def _add_condition_to_datetimes(cnd, pos, early, late):
-    '''Add the duration of time in a condition and adds to it to early and late.
+    """Determine the duration of time in a condition and add to it to early and late.
 
     For example, 'MM=02' is equal to one month of time (just February). But if the
     sign is not '=', then the duration depends of the Position of the condition.
     For example, 'MM>=02', if on the left, as in
     'MM>=02' is equal to 11 months (February through December)
-    '''
+    """
     level = level_to_datetime_unit(cnd.level)
     if cnd.sign == '=':
         early = add_to_datetime(early, level, _adjust(cnd.level, cnd.value))
@@ -58,7 +58,7 @@ def _add_condition_to_datetimes(cnd, pos, early, late):
     return (early, late)
 
 def duration(rng):
-    '''Calculate the number of seconds contained in a by a date Range.'''
+    """Calculate the number of seconds contained in a by a date Range."""
 
     seconds = 0
     early = pendulum.create(1, 1, 1, 0, 0, 0)
@@ -93,6 +93,7 @@ def add_to_datetime(dtime, unit, value):
 
 
 def get_min(level):
+    """Get the minimum value for a date unit."""
     if level == Level.YYYY:
         return 1
     elif level == Level.MM:
@@ -105,6 +106,7 @@ def get_min(level):
         return 0
 
 def get_max(level, dtime):
+    """Get the maximum value for a date unit."""
     if level == Level.YYYY:
         return 9999
     elif level == Level.MM:
@@ -117,9 +119,11 @@ def get_max(level, dtime):
         return 59
 
 def at_min(level, value):
+    """Determine if a value is the min value for a date unit."""
     return get_min(level) == value
 
 def at_max(level, dtime, value):
+    """Determine if a value is the max value for a date unit."""
     return get_max(level, dtime) == value
 
 def dt_value_for_level(dtime, level):
@@ -135,6 +139,9 @@ def dt_value_for_level(dtime, level):
         return dtime.minute
 
 def level_followed_by_all_mins(dtime):
+    """Determine if lowest level date unit which is followed by
+    date units at their minimum level.
+    """
     return_level = Level.MIN  # get lowest level to make it dynamic
     for level in reversed(list(enums.Level)):
         return_level = level
@@ -142,7 +149,9 @@ def level_followed_by_all_mins(dtime):
             break
     return return_level
 
+
 def datetime_to_dateparts(dtime):
+    """Create a list of DatePart objects representing a datetime."""
     parts = []
     smallest_non_min = level_followed_by_all_mins(dtime)
     for level in enums.Level:
@@ -166,6 +175,7 @@ def level_to_datetime_unit(level):
         return 'minutes'
 
 def datestr_to_dt(datestr, tzone):
+    """Create a datetime object from a yyyy[mm[dd[mm[ss]]]] string."""
     error = None
     try:
         if len(datestr) == 4:
