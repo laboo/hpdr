@@ -38,8 +38,6 @@ Maybe you think in local time but store your data in UTC?
 Or maybe your date range is too large to run in one query, and it's a pain to break it down?
 
 .. code-block:: python
-    #!/usr/bin/env python
-    
     import subprocess, os, os.path, tempfile, datetime
     from hpdr import api
     
