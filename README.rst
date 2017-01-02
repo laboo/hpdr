@@ -9,7 +9,9 @@ ranges with them can get out of control. hpdr solves this problem.
     >>> from hpdr import api
     >>> rng = api.build('2016102612', '2017122612').get_partition_range()
     >>> print(rng.build_display())
-    ((YYYY=2016 AND MM=10 AND DD=26 AND HH>=12) OR (YYYY=2016 AND MM=10 AND DD>26) OR (YYYY=2016 AND MM>10) OR (YYYY=2017 AND MM<12) OR (YYYY=2017 AND MM=12 AND DD<26) OR (YYYY=2017 AND MM=12 AND DD=26 AND HH<12))
+    ((YYYY=2016 AND MM=10 AND DD=26 AND HH>=12) OR (YYYY=2016 AND MM=10 AND DD>26)
+    OR (YYYY=2016 AND MM>10) OR (YYYY=2017 AND MM<12) OR (YYYY=2017 AND MM=12 AND DD<26)
+    OR (YYYY=2017 AND MM=12 AND DD=26 AND HH<12))
     >>> print(rng.build_display(pretty=True))
     (
          (YYYY=2016 AND MM=10 AND DD=26 AND HH>=12)
