@@ -5,6 +5,7 @@ When your Hive partitions are YYYY, MM, DD, HH and not YYYYMMDDHH, composing dat
 ranges with them can get out of control. hpdr solves this problem.
 
 .. code-block:: python
+
     >>> from hpdr import api
     >>> rng = api.build('2016102612', '2017122612').get_partition_range()
     >>> print(rng.build_display())
@@ -22,6 +23,7 @@ ranges with them can get out of control. hpdr solves this problem.
 Maybe you think in local time but store your data in UTC?
 
 .. code-block:: python
+
     >>> from hpdr import api
     >>> rng = api.build('2016102612', '2017122612',
     ...                 izone='America/Los_Angeles',
@@ -38,6 +40,7 @@ Maybe you think in local time but store your data in UTC?
 Or maybe your date range is too large to run in one query, and it's a pain to break it down?
 
 .. code-block:: python
+
     import subprocess, os, os.path, tempfile, datetime
     from hpdr import api
     
@@ -66,7 +69,7 @@ Or maybe your date range is too large to run in one query, and it's a pain to br
                 subprocess.check_call(cmd, stdout=outfile)
 
 This prints::
-    
+
     (YYYY=2016 AND MM=11 AND DD>=01 AND DD<06)
     (YYYY=2016 AND MM=11 AND DD>=06 AND DD<11)
     (YYYY=2016 AND MM=11 AND DD>=11 AND DD<16)
@@ -77,6 +80,7 @@ This prints::
 It runs 6 Hive queries built from a template containing HPDR_ variables. Something like this:
 
 .. code-block:: python
+
     SELECT
       YEAR(event_timestamp),
       MONTH(event_timestamp),
@@ -90,6 +94,7 @@ It runs 6 Hive queries built from a template containing HPDR_ variables. Somethi
 The first query looks like this.
 
 .. code-block:: python
+
     SELECT
       YEAR(event_timestamp),
       MONTH(event_timestamp),

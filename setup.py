@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 setup(
     name='hpdr',
     packages=find_packages(),
-    version='0.9',
+    version='0.11',
     description='Hive date ranges simplified.',
     author='Mark Libucha',
     author_email='mlibucha@gmail.com',
