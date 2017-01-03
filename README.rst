@@ -46,7 +46,7 @@ Or maybe your date range is too large to run in one query, and it's a pain to br
     import subprocess, os, os.path, tempfile, datetime
     from hpdr import api
     
-    QUERY_FILE = ‘myquery.hql'
+    QUERY_FILE = 'myquery.hql'
     OUT_FILE = 'out.txt'
     begin = datetime.datetime(2016, 11, 1)
     end = datetime.datetime(2016, 11, 30)
@@ -79,9 +79,9 @@ This prints::
     (YYYY=2016 AND MM=11 AND DD>=21 AND DD<26)
     (YYYY=2016 AND MM=11 AND DD>=26 AND DD<30)
 
-It runs 6 Hive queries built from a template containing HPDR_ variables. Something like this:
+It runs 6 Hive queries built from a template containing HPDR\_ variables. Something like this:
 
-.. code-block:: python
+::
 
     SELECT
       YEAR(event_timestamp),
@@ -95,7 +95,7 @@ It runs 6 Hive queries built from a template containing HPDR_ variables. Somethi
 
 The first query looks like this.
 
-.. code-block:: python
+::
 
     SELECT
       YEAR(event_timestamp),
@@ -106,7 +106,7 @@ The first query looks like this.
         event_timestamp >= '2016-11-01 00:00:00'
         event_timestamp < '2016-11-06 00:00:00'
 
-The full list of HPDR_ variables available for that first query is::
+The full list of HPDR\_ variables available for that first query is::
 
     variable                     value
     ---------------------------  -------------------
