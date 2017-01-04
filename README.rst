@@ -2,7 +2,9 @@ HPDR: Hive Partition Date Ranges
 ================================
 
 When your Hive partitions are YYYY, MM, DD, HH and not YYYYMMDDHH, composing date
-ranges with them can get out of control. hpdr solves this problem.
+ranges with them can get out of control.
+
+hpdr solves this problem.
 
 .. code-block:: python
 
@@ -88,9 +90,8 @@ It runs 6 Hive queries built from a template containing HPDR\_ variables. Someth
       MONTH(event_timestamp),
       DAY(event_timestamp),
       FROM my_table
-      WHERE
-        event_timestamp >= '${HPDR_begin_ts}'
-        event_timestamp < '${HPDR_end_ts}'
+      WHERE event_timestamp >= '${HPDR_begin_ts}'
+        AND event_timestamp < '${HPDR_end_ts}'
         AND ${HPDR_range}
 
 The first query looks like this.
@@ -102,9 +103,9 @@ The first query looks like this.
       MONTH(event_timestamp),
       DAY(event_timestamp),
       FROM my_table
-      WHERE
-        event_timestamp >= '2016-11-01 00:00:00'
-        event_timestamp < '2016-11-06 00:00:00'
+      WHERE event_timestamp >= '2016-11-01 00:00:00'
+        AND event_timestamp < '2016-11-06 00:00:00'
+        AND (YYYY=2016 AND MM=11 AND DD>=01 AND DD<06)
 
 The full list of HPDR\_ variables available for that first query is::
 
