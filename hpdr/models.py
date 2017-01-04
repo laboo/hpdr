@@ -243,6 +243,7 @@ class Spec(object):
         self.end = Spec._shift_dt(end, izone, qzone)
         self._build_slop(slop, lslop, rslop)
         self.partition_range = Spec._build_range(self.slop_begin, self.slop_end)
+        self.partition_range_no_slop = Spec._build_range(self.begin, self.end)
         self.variables_map = self._build_variables_map()
         Condition.set_display(Level.YYYY, years)
         Condition.set_display(Level.MM, months)
@@ -363,12 +364,6 @@ class Spec(object):
                 ors.append(grp)
 
         return Range(ands, ors)
-
-    def get_partition_range(self):
-        return self.partition_range
-
-    def get_variables_map(self):
-        return self.variables_map
 
     def _build_variables_map(self):
         """Creates a map of HPDR_ variables to their values for use in

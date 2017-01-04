@@ -9,7 +9,7 @@ hpdr solves this problem.
 .. code-block:: python
 
     >>> from hpdr import api
-    >>> rng = api.build('2016102612', '2017122612').get_partition_range()
+    >>> rng = api.build('2016102612', '2017122612').partition_range
     >>> print(rng.build_display())
     ((YYYY=2016 AND MM=10 AND DD=26 AND HH>=12) OR (YYYY=2016 AND MM=10 AND DD>26)
     OR (YYYY=2016 AND MM>10) OR (YYYY=2017 AND MM<12) OR (YYYY=2017 AND MM=12 AND DD<26)
@@ -31,7 +31,7 @@ Maybe you think in local time but store your data in UTC?
     >>> from hpdr import api
     >>> rng = api.build('2016102612', '2017122612',
     ...                 izone='America/Los_Angeles',
-    ...                 qzone='UTC').get_partition_range()
+    ...                 qzone='UTC').partition_range
     >>> print(rng.build_display(pretty=True))
     (
          (YYYY=2016 AND MM=10 AND DD=26 AND HH>=19)
@@ -68,7 +68,7 @@ Or maybe your date range is too large to run in one query, and it's a pain to br
             f.write(query)
             f.flush()
             cmd = ['/usr/bin/hive', '-f',  f.name]
-            print(spec.get_partition_range().build_display())
+            print(spec.partition_range.build_display())
             with open(OUT_FILE, 'a') as outfile:
                 subprocess.check_call(cmd, stdout=outfile)
 

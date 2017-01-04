@@ -31,7 +31,7 @@ def main(args):
             query = open(args.file, 'r').read()
             print(spec.substitute(query, args.verbose, args.pretty))
         else:
-            print(spec.get_partition_range().build_display(pretty=args.pretty))
+            print(spec.partition_range.build_display(pretty=args.pretty))
 
 if __name__ == '__main__':
     PARSER = argparse.ArgumentParser(description='hpdr -- Hive Partition Date Range')

@@ -12,10 +12,14 @@ from random import randint
 
 def durations_match(one_spec, specs):
     many = 0
-    for spec in specs:
-        rng = spec.get_partition_range()
+    for i, spec in enumerate(specs):
+        # We can only count the slop once
+        if i == 0:
+            rng = spec.partition_range
+        else:
+            rng = spec.partition_range_no_slop
         many += utils.duration(rng)
-    one_rng = one_spec.get_partition_range()
+    one_rng = one_spec.partition_range
     one = utils.duration(one_rng)
     #print('\nmany duration ({}) one duration ({})'.format(many, one))
     assert many == one, 'many duration ({}) != one duration ({})'.format(many, one)
