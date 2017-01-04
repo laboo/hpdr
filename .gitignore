@@ -6,3 +6,5 @@ __pycache__
 dist/
 hpdr.egg-info/
 .idea/
+.tox/
+doc/
