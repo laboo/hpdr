@@ -313,11 +313,16 @@ class Spec(object):
         if bli is not None:
             if (parts2[bli].value - parts1[bli].value) > 1:
                 bridge = ConditionsGroup(Position.middle)
-                left_sign = '>=' if parts1[bli].all_mins_follow else '>'
-                bridge.add(Condition(parts1[bli].level, left_sign,
-                                     parts1[bli].value, parts1[bli].max_value))
-                bridge.add(Condition(parts2[bli].level, '<',
-                                     parts2[bli].value, parts2[bli].max_value))
+                if (parts2[bli].value - parts1[bli].value) == 2 and not parts1[bli].all_mins_follow:
+                    # Prefer MM=11 to (MM>10 AND MM<12)
+                    bridge.add(Condition(parts1[bli].level, '=',
+                                         parts1[bli].value + 1, parts1[bli].max_value))
+                else:
+                    left_sign = '>=' if parts1[bli].all_mins_follow else '>'
+                    bridge.add(Condition(parts1[bli].level, left_sign,
+                                         parts1[bli].value, parts1[bli].max_value))
+                    bridge.add(Condition(parts2[bli].level, '<',
+                                         parts2[bli].value, parts2[bli].max_value))
                 ors.append(bridge)
             elif (parts2[bli].value - parts1[bli].value) == 1 and parts1[bli].all_mins_follow:
                 bridge = ConditionsGroup(Position.middle)
