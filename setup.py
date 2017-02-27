@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 setup(
     name='hpdr',
     packages=find_packages(),
-    version='0.15',
+    version='0.16',
     description='Hive date ranges simplified.',
     author='Mark Libucha',
     author_email='mlibucha@gmail.com',
@@ -19,7 +19,6 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
