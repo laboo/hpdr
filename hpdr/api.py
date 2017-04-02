@@ -1,6 +1,5 @@
 # pylint: disable=too-many-arguments
-"""Doco
-"""
+
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
@@ -11,6 +10,7 @@ from hpdr import utils
 from datetime import timedelta
 standard_library.install_aliases()
 
+        
 def build(begin,
           end,
           izone='UTC',
@@ -26,27 +26,28 @@ def build(begin,
     """Build a specification for a date range.
 
     Args:
-        begin: begin date of range, a datetime or yyyy[mm[dd[mm[ss]]]] string
-        end: end date of range, a datetime or yyyy[mm[dd[mm[ss]]]] string
-        izone: (optional) time zone for input dates, defaults to UTC
-        qzone: (optional) time zone to use in query, defaults to UTC
-        slop: (optional) duration to add to both ends of the partition range,
+        begin (str/datetime): begin date of range, a datetime or yyyy[mm[dd[mm[ss]]]] string
+        end (str/datetime): end date of range, a datetime or yyyy[mm[dd[mm[ss]]]] string
+        izone (str): tzdata time zone for input dates
+        qzone (str): tzdata time zone to use in query
+        slop (str): duration to add to both ends of the partition range,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours
-        lslop: (optional) duration to add to the front end of the partition range,
+        lslop (str): duration to add to the front end of the partition range,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours
-        rslop: (optional) duration to add to the back end of the partition range,
+        rslop (str): duration to add to the back end of the partition range,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours
-        years: (optional) name for years partition, defaults to YYYY
-        months: (optional) name for months partition, defaults to MM
-        days: (optional) name for days partition, defaults to DD
-        hours: (optional) name for hours partition, defaults to HH
-        minutes: (optional) name for hours partition, defaults to MIN
+        years (str): name for years partition
+        months (str): name for months partition
+        days (str): name for days partition
+        hours (str): name for hours partition
+        minutes (str): name for hours partition
 
     Returns: 
-       A Spec object representing the date range
+       hpdr.models.Spec: Object representing the date range
+
     """
 
     specs = build_with_steps(begin,
@@ -85,39 +86,43 @@ def build_with_steps(begin,
     followed by right slop.
 
     Args:
-        begin: begin date of range, a datetime or yyyy[mm[dd[mm[ss]]]] string
-        end: end date of range, a datetime or yyyy[mm[dd[mm[ss]]]] string
-        step: (optional) duration to break individual Spec objects into,
+        begin (str/datetime): begin date of range, a datetime or yyyy[mm[dd[mm[ss]]]] string
+        end (str/datetime): end date of range, a datetime or yyyy[mm[dd[mm[ss]]]] string
+        step (str): duration to break individual Spec objects into,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours. If None, one Spec is returned.
-        izone: (optional) time zone for input dates, defaults to UTC
-        qzone: (optional) time zone to use in query, defaults to UTC
-        slop: (optional) duration to add to both ends of the partition range,
+        izone (str): tzdata time zone for input dates
+        qzone (str): tzdata time zone to use in query
+        slop (str): duration to add to both ends of the partition range,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours
-        lslop: (optional) duration to add to the front end of the partition range,
+        lslop (str): duration to add to the front end of the partition range,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours
-        rslop: (optional) duration to add to the back end of the partition range,
+        rslop (str): duration to add to the back end of the partition range,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours
-        years: (optional) name for years partition, defaults to YYYY
-        months: (optional) name for months partition, defaults to MM
-        days: (optional) name for days partition, defaults to DD
-        hours: (optional) name for hours partition, defaults to HH
-        minutes: (optional) name for hours partition, defaults to MIN
+        years (str): name for years partition
+        months (str): name for months partition
+        days (str): name for days partition
+        hours (str): name for hours partition
+        minutes (str): name for hours partition
 
     Returns: 
-       A list of Spec objects representing the date range. For example,
+       A list of hpdr.model.Spec: List representing the date range. For example,
 
        build_with_steps(begin='20160901', end=20161001, step=10days, --slop=1hours)
 
        returns a list of five Spec objects, representing these ranges:
 
        (YYYY=2016 AND MM=08 AND DD=31 AND HH>=23) [left slop of 1 hour]
+
        (YYYY=2016 AND MM=09 AND DD>=01 AND DD<11) [10 days]
+
        (YYYY=2016 AND MM=09 AND DD>=11 AND DD<21) [10 days]
+
        (YYYY=2016 AND MM=09 AND DD>=21)           [10 days]
+
        (YYYY=2016 AND MM=10 AND DD=01 AND HH=00)  [right slop of 1 hour]
     
     """

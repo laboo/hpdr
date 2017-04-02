@@ -64,16 +64,16 @@ def duration(rng):
     early = pendulum.create(1, 1, 1, 0, 0, 0)
     late = pendulum.create(1, 1, 1, 0, 0, 0)
     smallest_and_level = None
-    for an_and in sorted(rng.ands):
+    for an_and in sorted(rng._ands):
         smallest_and_level = an_and.level
         (early, late) = _add_condition_to_datetimes(an_and, None, early, late)
-    if len(rng.ors) == 0:
+    if len(rng._ors) == 0:
         late = add_to_datetime(late,
                                level_to_datetime_unit(smallest_and_level),
                                1)
         seconds += (late - early).total_seconds()
     else:
-        for grp in rng.ors:
+        for grp in rng._ors:
             erly = early.copy()
             lte = late.copy()
             for cnd in sorted(grp):
@@ -220,3 +220,104 @@ class DatePart(object):
         return self.value == self.min_value
     def at_max(self):
         return self.value == self.max_value
+
+@attr.s(cmp=False)
+class Condition(object):
+    """A boolean condition, displayed like 'HH>=20'.
+
+    HH is the level.
+    >= is the sign.
+    20 is the value.
+    """
+
+    display = {}  # class level attribute
+    level = attr.ib(validator=attr.validators.instance_of(Level))
+    sign = attr.ib()
+    value = attr.ib(validator=attr.validators.instance_of(int))
+    max_value = attr.ib(validator=attr.validators.instance_of(int))
+
+    @staticmethod
+    def set_display(level, value):
+        Condition.display[level] = value
+
+    @staticmethod
+    def _zero_padded_value(value):
+        if len(str(value)) == 1:
+            return '0' + str(value)
+        else:
+            return str(value)
+
+    def __str__(self):
+        return ((Condition.display[self.level]
+                 if self.level in Condition.display else self.level.name)
+                + self.sign
+                + self._zero_padded_value(self.value))
+    def __eq__(self, other):
+        return self.level == other.level and int(self.value) == int(other.value)
+    def __ne__(self, other):
+        return self != other
+    def __lt__(self, other):
+        return (self.level < other.level or
+                (self.level == other.level and int(self.value) < int(other.value)))
+    def __le__(self, other):
+        return (self < other) or (self == other)
+    def __gt__(self, other):
+        return (self.level > other.level or
+                (self.level == other.level and int(self.value) > int(other.value)))
+    def __ge__(self, other):
+        return (self > other) or (self == other)
+
+@attr.s(cmp=False)
+class ConditionsGroup(object):
+    """A group of Condition objects, logically connected by ANDs.
+
+    Displayed like (YYYY=2016 AND MM=11 AND DD>=12).
+    """
+    position = attr.ib(validator=attr.validators.instance_of(Position))
+    conditions = attr.ib(init=False, default=attr.Factory(list))
+
+    def add(self, condition):
+        self.conditions.append(condition)
+    def pop(self):
+        return self.conditions.pop()
+    def __str__(self):
+        if self.conditions:
+            return str(self.position) + ' ' + ' '.join([str(x) for x in sorted(self.conditions)])
+        else:
+            return ''
+    def __iter__(self):
+        return self.conditions.__iter__()
+    def __getitem__(self, key):
+        return self.conditions.__getitem__(key)
+    def __len__(self):
+        return len(self.conditions)
+    def __eq__(self, other):
+        return (self.position == other.position and
+                sorted(self.conditions) == sorted(other.conditions))
+    def __ne__(self, other):
+        return self != other
+    def __lt__(self, other):
+        if self.position < other.position:
+            return True
+        if self.position == other.position:
+            if self.position == Position.left:
+                if len(self.conditions) > len(other.conditions):
+                    return True
+            elif self.position == Position.right:
+                if len(self.conditions) < len(other.conditions):
+                    return True
+    def __le__(self, other):
+        return (self < other) or (self == other)
+    def __gt__(self, other):
+        if self.position > other.position:
+            return True
+        if self.position == other.position:
+            if self.position == Position.left:
+                if len(self.conditions) < len(other.conditions):
+                    return True
+            elif self.position == Position.right:
+                if len(self.conditions) > len(other.conditions):
+                    return True
+    def __ge__(self, other):
+        return (self > other) or (self == other)
+    

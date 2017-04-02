@@ -20,158 +20,31 @@ import pendulum
 from future import standard_library
 from six import string_types
 from hpdr.enums import Level, Position
-from hpdr import utils
+from hpdr.utils import (Condition, ConditionsGroup,
+                        deltastr_to_td, datetime_to_dateparts, datestr_to_dt)
 standard_library.install_aliases()
 
-@attr.s(cmp=False)
-class Condition(object):
-    """A boolean condition, displayed like 'HH>=20'.
-
-    HH is the level.
-    >= is the sign.
-    20 is the value.
-    """
-
-    display = {}  # class level attribute
-    level = attr.ib(validator=attr.validators.instance_of(Level))
-    sign = attr.ib()
-    value = attr.ib(validator=attr.validators.instance_of(int))
-    max_value = attr.ib(validator=attr.validators.instance_of(int))
-
-    @staticmethod
-    def set_display(level, value):
-        Condition.display[level] = value
-
-    @staticmethod
-    def _zero_padded_value(value):
-        if len(str(value)) == 1:
-            return '0' + str(value)
-        else:
-            return str(value)
-
-    def __str__(self):
-        return ((Condition.display[self.level]
-                 if self.level in Condition.display else self.level.name)
-                + self.sign
-                + self._zero_padded_value(self.value))
-    def __eq__(self, other):
-        return self.level == other.level and int(self.value) == int(other.value)
-    def __ne__(self, other):
-        return self != other
-    def __lt__(self, other):
-        return (self.level < other.level or
-                (self.level == other.level and int(self.value) < int(other.value)))
-    def __le__(self, other):
-        return (self < other) or (self == other)
-    def __gt__(self, other):
-        return (self.level > other.level or
-                (self.level == other.level and int(self.value) > int(other.value)))
-    def __ge__(self, other):
-        return (self > other) or (self == other)
-
-@attr.s(cmp=False)
-class ConditionsGroup(object):
-    """A group of Condition objects, logically connected by ANDs.
-
-    Displayed like (YYYY=2016 AND MM=11 AND DD>=12).
-    """
-    position = attr.ib(validator=attr.validators.instance_of(Position))
-    conditions = attr.ib(init=False, default=attr.Factory(list))
-
-    def add(self, condition):
-        self.conditions.append(condition)
-    def pop(self):
-        return self.conditions.pop()
-    def __str__(self):
-        if self.conditions:
-            return str(self.position) + ' ' + ' '.join([str(x) for x in sorted(self.conditions)])
-        else:
-            return ''
-    def __iter__(self):
-        return self.conditions.__iter__()
-    def __getitem__(self, key):
-        return self.conditions.__getitem__(key)
-    def __len__(self):
-        return len(self.conditions)
-    def __eq__(self, other):
-        return (self.position == other.position and
-                sorted(self.conditions) == sorted(other.conditions))
-    def __ne__(self, other):
-        return self != other
-    def __lt__(self, other):
-        if self.position < other.position:
-            return True
-        if self.position == other.position:
-            if self.position == Position.left:
-                if len(self.conditions) > len(other.conditions):
-                    return True
-            elif self.position == Position.right:
-                if len(self.conditions) < len(other.conditions):
-                    return True
-    def __le__(self, other):
-        return (self < other) or (self == other)
-    def __gt__(self, other):
-        if self.position > other.position:
-            return True
-        if self.position == other.position:
-            if self.position == Position.left:
-                if len(self.conditions) < len(other.conditions):
-                    return True
-            elif self.position == Position.right:
-                if len(self.conditions) > len(other.conditions):
-                    return True
-    def __ge__(self, other):
-        return (self > other) or (self == other)
 
 @attr.s
 class Range(object):
-    '''A date range, abstractly represented by SQL conditions.
+    '''A date range, abstractly represented by SQL conditions.'''
 
-    Here's the representation of a protypical date range as SQL:
-
-    (YYYY=2017 AND MM=02 AND ((DD=15 AND HH>=12) OR (DD>15 AND DD<25) OR (DD=25 AND HH<12)))
-
-    for 10 days time, 2017021512 thru 2017022512. Structurally, the
-    range breaks down into three parts
-
-    (YYYY=2017 AND MM=02 AND [The "ands" part, the overlap between the dates on the high end.]
-    ((DD=15 AND HH>=12) OR   [The "left ors" part.]
-     (DD>15 AND DD<25) OR    [The "middle ors" part, referred to as "the bridge". Optional.]
-     (DD=25 AND HH<12))      [The "right ors" part.]
-    )
-
-    Stare at a few more of these and the pattern comes clear.
-
-    '''
-    ands = attr.ib(validator=attr.validators.instance_of(list))  # list of Condition
-    ors = attr.ib(validator=attr.validators.instance_of(list))   # list of ConditionsGroup
+    _ands = attr.ib(validator=attr.validators.instance_of(list))  # list of Condition
+    _ors = attr.ib(validator=attr.validators.instance_of(list))   # list of ConditionsGroup
 
     def build_display(self, pretty=False):
         '''Build a string for displaying the Range.
 
         Create a string version of the Range in valid SQL syntax for a conditional clause.
-        For example, for 2017021512 thru 2017022512,
-
-        pretty=False:
-        (YYYY=2017 AND MM=02 AND ((DD=15 AND HH>=12) OR (DD>15 AND DD<25) OR (DD=25 AND HH<12)))
-
-        pretty=True:
-        (
-        YYYY=2017 AND MM=02 AND
-         (
-             (DD=15 AND HH>=12)
-          OR (DD>15 AND DD<25)
-          OR (DD=25 AND HH<12)
-         )
-        )
         '''
+
         ands_str = ''
         ors_str = ''
         out = ''
         # Use copies because we might manipulate them, and manipulating might
         # break duration testing
-        ors = copy.deepcopy(self.ors)
-        ands = copy.deepcopy(self.ands)
+        ors = copy.deepcopy(self._ors)
+        ands = copy.deepcopy(self._ands)
         if (len(ors) == 1 and
                 len(ors[0].conditions) == 1 and
                 ors[0].conditions[0].sign == '='):
@@ -257,7 +130,11 @@ class Spec(object):
 
     @staticmethod
     def _calc_slop(slop):
-        return slop if Spec._not_a_delta_str(slop) else utils.deltastr_to_td(slop)
+        return slop if Spec._not_a_delta_str(slop) else deltastr_to_td(slop)
+
+    def variables(self):
+        '''Return a map of all HPDR\_ variables and their values defined for the range.'''
+        return this.variables_map
 
     def _build_slop(self, slop, lslop, rslop):
         add_to_begin = Spec._calc_slop(lslop) if lslop else Spec._calc_slop(slop)
@@ -281,7 +158,7 @@ class Spec(object):
                                     dtime.microsecond,
                                     i_zone_str if i_zone_str else 'UTC')
         elif isinstance(dtime, string_types):
-            dtime = utils.datestr_to_dt(dtime, i_zone_str)
+            dtime = datestr_to_dt(dtime, i_zone_str)
         else:
             raise ValueError('Unrecognized datetime type: ' + type(dtime))
         return dtime.in_timezone(q_zone_str if q_zone_str else 'UTC')
@@ -292,8 +169,8 @@ class Spec(object):
 
         ands = []
         ors = []
-        parts1 = utils.datetime_to_dateparts(begin)
-        parts2 = utils.datetime_to_dateparts(end)
+        parts1 = datetime_to_dateparts(begin)
+        parts2 = datetime_to_dateparts(end)
         finished = False
         bli = None  # bridge_level_index
 
@@ -391,17 +268,17 @@ class Spec(object):
         vars_list.append((hpdr_prefix + 'slop_begin_ts',
                           self.slop_begin.format(timestamp_pattern)))
         vars_list.append((hpdr_prefix + 'slop_end_ts', self.slop_end.format(timestamp_pattern)))
-        vars_list += Spec.vars_for_datetime(hpdr_prefix + 'begin', self.begin)
-        vars_list += Spec.vars_for_datetime(hpdr_prefix + 'end', self.end)
-        vars_list += Spec.vars_for_datetime(hpdr_prefix + 'slop_begin', self.slop_begin)
-        vars_list += Spec.vars_for_datetime(hpdr_prefix + 'slop_end', self.slop_end)
+        vars_list += Spec._vars_for_datetime(hpdr_prefix + 'begin', self.begin)
+        vars_list += Spec._vars_for_datetime(hpdr_prefix + 'end', self.end)
+        vars_list += Spec._vars_for_datetime(hpdr_prefix + 'slop_begin', self.slop_begin)
+        vars_list += Spec._vars_for_datetime(hpdr_prefix + 'slop_end', self.slop_end)
         vars = OrderedDict(vars_list)
         vars[hpdr_prefix + 'range'] = hpdr
         vars[hpdr_prefix + 'range_pretty'] = hpdr_pretty
         return vars
 
     @staticmethod
-    def vars_for_datetime(prefix, dtime):
+    def _vars_for_datetime(prefix, dtime):
         vars = []
         vars.append((prefix + '_unixtime', dtime.strftime('%s')))
         vars.append((prefix + '_unixtime_ms', dtime.strftime('%s000')))
@@ -415,7 +292,7 @@ class Spec(object):
         return vars
 
     @staticmethod
-    def comment_out(text):
+    def _comment_out(text):
         out = ''
         for line in text.split('\n'):
             out += '-- ' + line + '\n'
@@ -425,16 +302,18 @@ class Spec(object):
                    query,
                    verbose=False,
                    pretty=False):
-        '''Fills in the HPDR_ varibles with the values.
+        '''Fills in the HPDR\_ varibles with the values.
+
         Args:
-            query: a string (optionally) containing HPDR_ variables
-            verbose: print out lots of extra info as an SQL comment
-            pretty: if True returns just HPDR_range_pretty variable
+            query (string): a string (optionally) containing HPDR\_ variables
+            verbose (bool): if True prints out lots of extra info as an SQL comment
+            pretty(bool): if True returns just HPDR_range_pretty variable
 
         Returns:
-           query with HDPR_ variables substituted for, or HPDR_range_pretty
+           str: query with HDPR\_ variables substituted for, or HPDR_range_pretty
            value if pretty=True
         '''
+
         hpdr = self.partition_range.build_display(pretty=False)
         hpdr_pretty = self.partition_range.build_display(pretty=True)
 
@@ -467,11 +346,11 @@ class Spec(object):
                 out += '--\n'
                 out += '-- Input:\n'
                 out += '---------\n'
-                out += Spec.comment_out(template_input)
+                out += Spec._comment_out(template_input)
                 out += '----------\n'
                 out += '-- Output:\n'
                 out += '----------\n'
-                out += Spec.comment_out(filled)
+                out += Spec._comment_out(filled)
                 out += '----------\n'
             out += '--\n'
             out += ('-- This is a complete list of the available '
