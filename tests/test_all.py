@@ -110,3 +110,7 @@ def test_min_day():
     all(pendulum.create(2014,3,1,0,0,0,0),
         pendulum.create(2014,3,2,0,0,0,0))
 
+def test_doc():
+    all(pendulum.create(2016,2,2,18,0,0,0),
+        pendulum.create(2016,5,11,3,56,0,0))
+

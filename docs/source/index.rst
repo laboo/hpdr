@@ -12,9 +12,13 @@ There's a lot a want to say, but it can't be in the toc, can it be?
    :maxdepth: 2
    :glob:
 
-   api
-   algorithm
    why
+   getting
+   advanced
+   template
+   trust
+   algorithm
+   api
 
 
 Indices
