@@ -91,8 +91,8 @@ def build_with_steps(begin,
         step (str): duration to break individual Spec objects into,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours. If None, one Spec is returned.
-        izone (str): tzdata timezone data is stored in
-        qzone (str): tzdata timezone data is displayed in
+        szone (str): tzdata timezone data is stored in
+        dzone (str): tzdata timezone data is displayed in
         slop (str): duration to add to both ends of the partition range,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours
