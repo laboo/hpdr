@@ -13,8 +13,8 @@ standard_library.install_aliases()
         
 def build(begin,
           end,
-          izone='UTC',
-          qzone='UTC',
+          szone='UTC',
+          dzone='UTC',
           slop=None,
           lslop=None,
           rslop=None,
@@ -28,8 +28,8 @@ def build(begin,
     Args:
         begin (str/datetime): begin date of range, a datetime or yyyy[mm[dd[mm[ss]]]] string
         end (str/datetime): end date of range, a datetime or yyyy[mm[dd[mm[ss]]]] string
-        izone (str): tzdata time zone for input dates
-        qzone (str): tzdata time zone to use in query
+        szone (str): tzdata timezone data is stored in
+        dzone (str): tzdata timezone range is displayed in
         slop (str): duration to add to both ends of the partition range,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours
@@ -52,8 +52,8 @@ def build(begin,
 
     specs = build_with_steps(begin,
                              end,
-                             izone=izone,
-                             qzone=qzone,
+                             szone=szone,
+                             dzone=dzone,
                              slop=slop,
                              lslop=lslop,
                              rslop=rslop,
@@ -69,8 +69,8 @@ def build(begin,
 def build_with_steps(begin,
                      end,
                      step=None,
-                     izone='UTC',
-                     qzone='UTC',
+                     szone='UTC',
+                     dzone='UTC',
                      slop=None,
                      lslop=None,
                      rslop=None,
@@ -91,8 +91,8 @@ def build_with_steps(begin,
         step (str): duration to break individual Spec objects into,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours. If None, one Spec is returned.
-        izone (str): tzdata time zone for input dates
-        qzone (str): tzdata time zone to use in query
+        izone (str): tzdata timezone data is stored in
+        qzone (str): tzdata timezone data is displayed in
         slop (str): duration to add to both ends of the partition range,
             specified as \\d+[years|months|days|hours|minutes],
             for example, 5hours
@@ -128,10 +128,10 @@ def build_with_steps(begin,
     """
 
     keywords = {}
-    if izone:
-        keywords['izone'] = izone
-    if qzone:
-        keywords['qzone'] = qzone
+    if szone:
+        keywords['szone'] = szone
+    if dzone:
+        keywords['dzone'] = dzone
     if slop:
         keywords['slop'] = slop
     if lslop:

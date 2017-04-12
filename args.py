@@ -18,11 +18,11 @@ def parse_args(args):
     PARSER.add_argument('-r', '--rslop', required=False,
                         help=('extra duration to add to end of range in '
                               '\\d+(days|hours|minutes) format.'))
-    PARSER.add_argument('-z', '--tz', required=False,
-                        help=('input time zone for begin and end times in tzdata format, '
+    PARSER.add_argument('--stz', required=False,
+                        help=('timezone data is stored in, in tzdata format, '
                               'e.g. Asia/Katmandu. Defaults to UTC.'))
-    PARSER.add_argument('-q', '--qtz', required=False,
-                        help=('query time zone for begin and end times in tzdata format, '
+    PARSER.add_argument('--dtz', required=False,
+                        help=('timezone range is displayed in, in tzdata format, '
                               'e.g. Asia/Katmandu. Defaults to UTC.'))
     PARSER.add_argument('-p', '--pretty', action='store_true',
                         help='pretty print output. Not relevant if --file option specified.')

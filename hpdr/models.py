@@ -100,8 +100,8 @@ class Spec(object):
     def __init__(self,
                  begin,
                  end,
-                 izone='UTC',
-                 qzone='UTC',
+                 szone='UTC',
+                 dzone='UTC',
                  slop=None,
                  lslop=None,
                  rslop=None,
@@ -110,10 +110,10 @@ class Spec(object):
                  days='DD',
                  hours='HH',
                  minutes='MIN'):
-        self.izone = izone
-        self.qzone = qzone
-        self.begin = Spec._shift_dt(begin, izone, qzone)
-        self.end = Spec._shift_dt(end, izone, qzone)
+        self.szone = szone
+        self.dzone = dzone
+        self.begin = Spec._shift_dt(begin, szone, dzone)
+        self.end = Spec._shift_dt(end, szone, dzone)
         self._build_slop(slop, lslop, rslop)
         self.partition_range = Spec._build_range(self.slop_begin, self.slop_end)
         self.partition_range_no_slop = Spec._build_range(self.begin, self.end)
@@ -143,7 +143,7 @@ class Spec(object):
         self.slop_end = (self.end + add_to_end) if add_to_end else self.end
 
     @staticmethod
-    def _shift_dt(dtime, i_zone_str, q_zone_str):
+    def _shift_dt(dtime, s_zone_str, d_zone_str):
         if isinstance(dtime, pendulum.pendulum.Pendulum):
             pass  # pendulum types are good
         elif isinstance(dtime, datetime):
@@ -156,12 +156,12 @@ class Spec(object):
                                     dtime.minute,
                                     dtime.second,
                                     dtime.microsecond,
-                                    i_zone_str if i_zone_str else 'UTC')
+                                    s_zone_str if s_zone_str else 'UTC')
         elif isinstance(dtime, string_types):
-            dtime = datestr_to_dt(dtime, i_zone_str)
+            dtime = datestr_to_dt(dtime, s_zone_str)
         else:
             raise ValueError('Unrecognized datetime type: ' + type(dtime))
-        return dtime.in_timezone(q_zone_str if q_zone_str else 'UTC')
+        return dtime.in_timezone(d_zone_str if d_zone_str else 'UTC')
 
     @staticmethod
     def _build_range(begin, end):
@@ -261,8 +261,8 @@ class Spec(object):
         hpdr = self.partition_range.build_display(pretty=False)
         hpdr_pretty = self.partition_range.build_display(pretty=True)
         vars_list = []
-        vars_list.append((hpdr_prefix + 'izone', self.izone))
-        vars_list.append((hpdr_prefix + 'qzone', self.qzone))
+        vars_list.append((hpdr_prefix + 'szone', self.szone))
+        vars_list.append((hpdr_prefix + 'dzone', self.dzone))
         vars_list.append((hpdr_prefix + 'begin_ts', self.begin.format(timestamp_pattern)))
         vars_list.append((hpdr_prefix + 'end_ts', self.end.format(timestamp_pattern)))
         vars_list.append((hpdr_prefix + 'slop_begin_ts',
@@ -358,5 +358,5 @@ class Spec(object):
             out += '--\n'
             out += table_with_comments
             out += '--\n'
-            out += '-- Note that all values have been shifted to the query time zone (HPDR_qzone)\n'
+            out += '-- Note that all values have been shifted to the query time zone (HPDR_dzone)\n'
         return out
