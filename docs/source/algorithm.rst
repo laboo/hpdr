@@ -109,23 +109,6 @@ A hpdr date range can be correct, but can contain overlapping conditions. A stup
 
 This is non-minimal and not allowed in hpdr. A suprising number of these were ferreted out by unit tests.
 
-Minimal vs. readable
-********************
-
-Consider this example from above a little more closely.
-::
-
-    MM>=6 AND MM<10
-
-It's readable, but not quite minimal. It could be written with one less character.
-::
-
-    MM>5 AND MM<10
-
-But I consistently go with the non-minimal former option because it best represents the fact that date ranges are inclusive
-at the beginning and exclusive at the end.
-
-
 Questionable 
 ************
 

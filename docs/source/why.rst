@@ -4,11 +4,13 @@ Why hpdr?
 Partition date ranges are hard.
 *******************************
 
-At its heart, hpdr peforms a single, seemingly simple task. It builds a Hive Query Language (HQL) time range condition out of partitions for year, month, day, etc. Something like this::
+At its heart, hpdr peforms a single, seemingly simple task. It builds a Hive Query Language (HQL) time range condition
+out of partitions for year, month, day, etc. Something like this::
 
     YYYY=2016 AND MM=05
 
-That's how you have to specify "all of May 2016" when your partitions are YYYY, MM, and DD, instead of something easier to work with, like YYYYMMDD.
+That's how you have to specify "all of May 2016" when your partitions are YYYY, MM, and DD, instead of something easier
+to work with, like YYYYMMDD.
 
 Seems simple enough, but it can quickly grow out of control.
 ::
@@ -20,7 +22,9 @@ Seems simple enough, but it can quickly grow out of control.
      OR (YYYY=2016 AND MM=01 AND DD=28 AND HH<18)
     )
 
-This also represents a one month span (2015 Dec 28, 6PM - 2016 Jan 28, 6PM), but it's more complicated. And easier to get wrong. 
+This also represents a one month span (2015 Dec 28, 6PM - 2016 Jan 28, 6PM), but it's more complicated to compose.
+And easier to get wrong.
+
 In order to trust date ranges, they need to be auto-generated from a human-readable format.
 
 Timezones make them harder.
@@ -51,18 +55,19 @@ For Asia/Calcutta, it looks like this.
 You want to reuse your work.
 ****************************
 
-When you write a complex date range by hand, it takes a while to get right, and you're still not sure it is. A few months later, 
-when you need to rerun your query over a new date range, you're going to have to redo all that work.
+When you write a complex date range by hand, it takes a while to get it right, and you're still not sure it is. A few
+months later, when you need to rerun your query over a new date range, you're going to have to redo all that work.
 
 You want to save time and money.
 ********************************
 
-Opting for an overly inclusive date range because it's easier to write is a waste of computing cycles and your time. As our 
-data gets bigger and bigger, processing a few extra hours or days worth gets more and more expensive.
+Opting for an overly inclusive date range because it's easier to write is a waste of computing cycles and your time. As big
+data gets bigger, processing a few extra hours or days worth gets more and more expensive.
 
 You're nice.
 ************
 
-When you process more data than you need to, you're stealing resources from other people running their own jobs in the shared grid.
+When you process more data than you need to, you're stealing resources from other people running their own jobs in the
+shared grid.
 
 

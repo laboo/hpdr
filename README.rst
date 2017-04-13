@@ -30,7 +30,7 @@ Maybe you think in local time but store your data in UTC?
 
     >>> from hpdr import api
     >>> rng = api.build('2016102612', '2017122612',
-    ...                 izone='America/Los_Angeles',
+    ...                 dzone='America/Los_Angeles',
     ...                 qzone='UTC').partition_range
     >>> print(rng.build_display(pretty=True))
     (
@@ -111,7 +111,7 @@ The full list of HPDR\_ variables available for that first query is::
 
     variable                     value
     ---------------------------  -------------------
-    HPDR_izone                   UTC
+    HPDR_dzone                   UTC
     HPDR_qzone                   UTC
     HPDR_begin_ts                2016-11-01 00:00:00
     HPDR_end_ts                  2016-11-06 00:00:00

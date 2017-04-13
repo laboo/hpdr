@@ -38,10 +38,12 @@ Prints::
 With timezones
 *******************************
 
-If datetime objects passed as the *begin* and *end* argumentss have timezones associated with them, those timezones are ignored,
-and UTC is used instead. If you want to use a timezone other than UTC for *begin* and *end*, pass it with the *izone* argument.
+The datetime objects passed as the *begin* and *end* arguments must NOT have timezones associated with them, The timezone
+is assumed to be UTC unless you pass a different timezone with the *dzone* argument. The *dzone* timezone specifies
+the timezone the data is **stored** in, in Hive.
 
-Similarly, the timzeone used for the resulting date range is UTC unless you specify it with the *qzone* argument.
+To specify the timezone the data is used in the **query**, use the *qzone* argument. If you don't specify *qzone*,
+UTC is used.
 
 .. code-block:: python
 
@@ -52,7 +54,7 @@ Similarly, the timzeone used for the resulting date range is UTC unless you spec
 
   begin, end = datetime(2016, 12, 1), '20170203'
   rng = api.build(begin, end,
-                  izone='America/Los_Angeles',
+                  dzone='America/Los_Angeles',
                   qzone='Asia/Calcutta',
                  ).partition_range
 
@@ -94,9 +96,4 @@ Prints::
     OR (YEAR=2017 AND MONTH=02 AND DAY<15)
    )
   )
-
-
-
-
-
 

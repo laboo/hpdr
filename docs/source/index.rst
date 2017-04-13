@@ -15,6 +15,7 @@ There's a lot a want to say, but it can't be in the toc, can it be?
    why
    getting
    advanced
+   examples
    template
    trust
    algorithm

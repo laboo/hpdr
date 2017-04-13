@@ -4,16 +4,16 @@ Can you trust it?
 How do you know it's right?
 ***************************
 
-hpdr prints out some HQL when we call it with a couple of datetime objects, but how can we be sure what it prints out is accurate?
+hpdr prints out some HQL when you call it with a couple of datetime objects, but how can you be sure what it prints out is accurate?
 
-We could pretty print it and try to reason it out, but the whole purpose of hpdr in the first place is to eliminate that kind of
+You could pretty print it and try to reason it out, but the whole purpose of hpdr is to eliminate that kind of
 tedious, error-prone approach.
 
 Reversing the algorithm
 ***********************
 
-hpdr is tested by comparing the number of seconds between the two datetime objects with the number of seconds represented by each
-clause in the HQL output added together. Let's look at a simple example.
+hpdr is tested by comparing the number of seconds between the *begin* and *end* datetime objects with the number of seconds
+represented by each clause in the HQL output added together. Let's look at a simple example.
 
 .. code-block:: python
 

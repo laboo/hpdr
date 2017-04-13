@@ -5,7 +5,7 @@ Specifying slop
 *******************************
 
 The data you're after is not always in the "right" partitions. For example, you may want all data for the month of May, but due to
-clock skew, or network delays, some of the data for May sits in partition for the last hour of April or the first hour of June.
+clock skew, or network delays, some of the data for May sits in the partition for the last hour of April or the first hour of June.
 This little bit of extra "slop" on both ends of the main logical time range can make specifying the partition range
 a lot harder. You can use the *slop* argument to handle it.
 
@@ -31,11 +31,11 @@ Prints::
    )
   )
 
-This may not seem all that useful until you consider using the hpdr steps feature.
+This may not seem all that useful until you consider using the hpdr steps feature, described next.
 
   
 Using steps
-***************
+***********
 
 Suppose you want to query all the data for a full year, but that's so much data that running a single query would take too long or
 hog too many resources. If the query can logically be broken down into multiple queries each covering a portion of the year,
@@ -78,3 +78,4 @@ And for the second, like this::
 And so on.
 
 But even that's not that useful without templating with HPDR\_ variables.
+

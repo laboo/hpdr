@@ -11,8 +11,8 @@ standard_library.install_aliases()
 def main(args):
     keywords = {}
     if args.step: keywords['step'] = args.step
-    if args.tz: keywords['szone'] = args.stz
-    if args.qtz: keywords['dzone'] = args.dtz
+    if args.dzone: keywords['dzone'] = args.dzone
+    if args.qzone: keywords['qzone'] = args.qzone
     if args.slop: keywords['slop'] = args.slop
     if args.lslop: keywords['lslop'] = args.lslop
     if args.rslop: keywords['rslop'] = args.rslop
@@ -51,11 +51,11 @@ if __name__ == '__main__':
     PARSER.add_argument('-r', '--rslop', required=False,
                         help=('extra duration to add to end of range in '
                               '\\d+(days|hours|minutes) format.'))
-    PARSER.add_argument('--stz', required=False,
+    PARSER.add_argument('-d', '--dzone', required=False,
                         help=('timezone data is stored in, in tzdata format, '
                               'e.g. Asia/Katmandu. Defaults to UTC.'))
-    PARSER.add_argument('--dtz', required=False,
-                        help=('timezone range is displayed in, in tzdata format, '
+    PARSER.add_argument('-q' '--qzone', required=False,
+                        help=('timezone query dates and times are specified in, in tzdata format, '
                               'e.g. Asia/Katmandu. Defaults to UTC.'))
     PARSER.add_argument('-p', '--pretty', action='store_true',
                         help='pretty print output. Not relevant if --file option specified.')
