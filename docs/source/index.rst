@@ -6,8 +6,6 @@
 Welcome to hpdr's documentation!
 ================================
 
-There's a lot a want to say, but it can't be in the toc, can it be?
-
 .. toctree::
    :maxdepth: 2
    :glob:
