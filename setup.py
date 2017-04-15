@@ -7,7 +7,7 @@ setup(
     description='Hive date ranges simplified.',
     author='Mark Libucha',
     author_email='mlibucha@gmail.com',
-    url='http://hpdr.readthedocs.io/en/latest/'
+    url='http://hpdr.readthedocs.io/en/latest/',
     license='Apache 2.0',
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
