@@ -54,7 +54,7 @@ if __name__ == '__main__':
     PARSER.add_argument('-d', '--dzone', required=False,
                         help=('timezone data is stored in, in tzdata format, '
                               'e.g. Asia/Katmandu. Defaults to UTC.'))
-    PARSER.add_argument('-q' '--qzone', required=False,
+    PARSER.add_argument('-q', '--qzone', required=False,
                         help=('timezone query dates and times are specified in, in tzdata format, '
                               'e.g. Asia/Katmandu. Defaults to UTC.'))
     PARSER.add_argument('-p', '--pretty', action='store_true',
