@@ -1,3 +1,5 @@
+.. _templates_label:
+
 The payoff
 #################
 
@@ -24,6 +26,9 @@ Here's what your query might look like for the middle of May 2016::
   ts < CAST(unix_timestamp(${hiveconf:END}, 'yyyy-MM-dd') as bigint) * 1000 AND
   (YYYY=2016 AND MM=05 AND ((DD=14 AND HH>=16) OR (DD>14 AND DD<19) OR (DD=19 AND HH<18)))
 
+End of the month
+*********************
+
 At the end of the month, when you cross the May/June border, you'd have this::
 
   SET BEGIN='2016-05-30'
@@ -33,6 +38,8 @@ At the end of the month, when you cross the May/June border, you'd have this::
   ts < CAST(unix_timestamp(${hiveconf:END}, 'yyyy-MM-dd') as bigint) * 1000 AND
   (YYYY=2016 AND ((MM=05 AND DD=29 AND HH>=16) OR (MM=05 AND DD>29) OR (MM=06 AND DD<03) OR (MM=06 AND DD=03 AND HH<18)))
 
+Abstract it away
+*********************
 
 Or, you can create a hpdr template. It's just a query with HPDR\_ variables in it::
 
@@ -139,3 +146,35 @@ You can get a list of all the HPDR\_ variables with the *-v* flag::
     -- HPDR_slop_end_sec            00
     --
     -- Note that all values have been shifted to the query time zone (HPDR_qzone)
+
+HPDR\_ functions
+***************
+
+In addition to HPDR\_ variables, there is also a HPDR\_ function for dealing with selected columns
+which represent timestamps.
+
+Suppose you have a column in your database called 'ts', which store unix times (seconds from the
+epoch in UTC). Values like this: 1465001912.
+
+Let's further suppose you want to display the output in your HPDR_qzone, 'America/Los_Angeles' in
+the example above.
+
+You'd need to do this::
+
+  SELECT FROM_UTC_TIMESTAMP(ts, 'America/Los_Angeles')
+
+which is fine, but if you've got several such columns, you need to keep repeating the timezone.
+Since hpdr knows the timezone, you can do this instead::
+
+  SELECT ${HPDR_to_time(ts)}
+
+If your database time (HPDR_dzone) is not UTC, it gets even more complex when you do it manually.::
+
+  SELECT FROM_UTC_TIMESTAMP(TO_UTC_TIMESTAMP(ts, 'America/New_York'), 'America/Los_Angeles')
+
+Again, hpdr knows the timezones you specified, so using the HDPR\_ function doesn't change::
+
+  SELECT ${HPDR_to_time(ts)}
+
+
+

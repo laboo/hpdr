@@ -22,6 +22,7 @@ from six import string_types
 from hpdr.enums import Level, Position
 from hpdr.utils import (Condition, ConditionsGroup,
                         deltastr_to_td, datetime_to_dateparts, datestr_to_dt)
+from hpdr.functions import replace_all
 standard_library.install_aliases()
 
 
@@ -331,7 +332,12 @@ class Spec(object):
             template_input = query
         else:
             template_input = hpdr_pretty if pretty else hpdr
-        template = Template(template_input)
+        template_array = []
+        for line in template_input.split('\n'):
+            template_array.append(replace_all(line,
+                                              self.variables_map['HPDR_qzone'],
+                                              self.variables_map['HPDR_dzone']))
+        template = Template('\n'.join(template_array))
         filled = template.safe_substitute(self.variables_map)
         out = filled
         if verbose:

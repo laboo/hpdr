@@ -119,5 +119,5 @@ They were unreadable and unmaintainable. I thought I would whip up a nice Python
 But it turned out to be much harder than I thought. The code I've written to build a date range is pretty dense. The line of 
 attack I settled on is indirect. But it was the best I could come up with. 
 
-Is there a simpler, recursive algorithm? I didn't see it.
+Is there a simpler, perhaps recursive, algorithm? I didn't see it.
 

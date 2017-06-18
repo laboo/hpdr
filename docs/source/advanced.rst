@@ -18,7 +18,7 @@ a lot harder. You can use the *slop* argument to handle it.
   begin, end = '20160501', '20160601'
   rng = api.build(begin, end, slop='1hours').partition_range
 
-  print rng.build_display(True)  # True gets pretty print
+  print rng.build_display(pretty=True)
 
 Prints::
 
@@ -52,7 +52,7 @@ Here's how we can specify the ranges for 2016 in chunks of 60 days.
   begin, end = '2016', '2017'
   specs = api.build_with_steps(begin, end, slop='1hours', step='60days')
   for spec in specs:
-    print spec.partition_range.build_display(True)  # True gets pretty print
+    print spec.partition_range.build_display(pretty=True)
 
 
 The query printed the first 60 days looks like this::
@@ -77,5 +77,5 @@ And for the second, like this::
   
 And so on.
 
-But even that's not that useful without templating with HPDR\_ variables.
+But even that's not that useful without templating with HPDR\_ variables. See :ref:`templates_label`. 
 

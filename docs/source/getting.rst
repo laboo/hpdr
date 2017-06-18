@@ -25,7 +25,7 @@ Two dates are required. They can be Python datetime objects, subclasses of datet
   begin, end = datetime(2016, 12, 1), '20170203'
   rng = api.build(begin, end).partition_range
 
-  print rng.build_display(True)  # True gets pretty print
+  print rng.build_display(pretty=True)
 
 Prints::
     
@@ -58,7 +58,7 @@ UTC is used.
                   qzone='Asia/Calcutta',
                  ).partition_range
 
-  print rng.build_display(True)  # True gets pretty print
+  print rng.build_display(pretty=True)
 
 Prints::
 
